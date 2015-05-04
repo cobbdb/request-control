@@ -1,0 +1,14 @@
+<!doctype html>
+<html>
+<head>
+    <script src="requester.js"></script>
+    <script>
+        top.addEventListener('keypress', function (event) {
+            if (event.keyCode === 32) {
+                dorequest('bad.url', '<404frame>');
+            }
+        });
+    </script>
+</head>
+<body></body>
+</html>
