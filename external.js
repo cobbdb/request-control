@@ -1,1 +1,1 @@
-console.log('~~ external resource loaded.');
+// Some vendor or 3rd party javascript in here.

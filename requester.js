@@ -14,13 +14,9 @@ function dorequest(url, sigel) {
     try {
         req.send();
     } catch (err) {
-        if (err.name === 'NetworkError') {
-            logit('a network error occurred.');
-        } else {
-            logit(
-                'error occurred:',
-                err.name
-            );
-        }
+        logit(
+            'error occurred:',
+            err.name
+        );
     }
 }

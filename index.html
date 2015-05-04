@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+    <script src="ajax-spy.js"></script>
     <style>
         iframe {
             border: 1px solid black;
@@ -16,14 +17,8 @@
     <iframe src="200-frame.html" id="frame200" width="400" height="200"></iframe>
     <iframe src="404-frame.html" id="frame404" width="400" height="200"></iframe>
     <script>
-        (function () {
-            var frame = document.getElementById('frame200'),
-                oldajax = frame.contentWindow.XMLHttpRequest;
-            frame.contentWindow.XMLHttpRequest = function (args) {
-                console.log('spying on XMLHttpRequest object!');
-                return new oldajax(args);
-            };
-        }());
+        AjaxSpy('frame200');
+        AjaxSpy('frame404');
     </script>
 </body>
 </html>
