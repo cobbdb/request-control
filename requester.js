@@ -12,9 +12,7 @@ function dorequest(url, sigel) {
         );
     }, false);
     try {
-        console.log('>> before send');
         req.send();
-        console.log('>> after send');
     } catch (err) {
         logit(
             'error occurred:',
