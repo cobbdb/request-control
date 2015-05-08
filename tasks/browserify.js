@@ -16,7 +16,7 @@ module.exports = function (grunt) {
         browserify: {
             global: {
                 files: {
-                    'bin/reqctrl.js': 'src/reqctrl.js'
+                    'bin/reqctrl.js': 'src/core.js'
                 },
                 options: {
                     browserifyOptions: {

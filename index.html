@@ -17,7 +17,9 @@
     <iframe src="200-frame.html" id="frame200" width="400" height="200"></iframe>
     <iframe src="404-frame.html" id="frame404" width="400" height="200"></iframe>
     <script>
-        RequestControl();
+        RequestControl({
+            throttle: 2000
+        });
     </script>
 </body>
 </html>

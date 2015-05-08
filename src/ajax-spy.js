@@ -28,7 +28,7 @@ module.exports = function (opts) {
                 opts.context.rcLastAjaxReq = Date.now();
                 oldsend.apply(req, arguments);
             } else {
-                log('>>> <Ajax> request blocked!', id);
+                log('>>> <Ajax> request blocked!', opts.id);
             }
         };
         req.addEventListener('load', function () {

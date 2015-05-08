@@ -25,7 +25,7 @@ module.exports = function (opts) {
             opts.context.rcLastImgReq = Date.now();
             return new oldimage(width, height);
         } else {
-            log('>>> <Image> request blocked!', id);
+            log('>>> <Image> request blocked!', opts.id);
             return {};
         }
     };

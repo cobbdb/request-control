@@ -2,9 +2,13 @@ var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     log = require('./log.js');
 
+/**
+ * @param {Number} [opts.throttle]
+ */
 module.exports = function (opts) {
     var spyList = [];
-    function invade(context) {
+    opts = opts || {};
+    function invade(context, id) {
         var i, frame, len;
         context = context || global.self;
         len = context.frames.length;
@@ -13,14 +17,14 @@ module.exports = function (opts) {
         if (!context.rcThrottled) {
             context.rcThrottled = true;
             context.XMLHttpRequest = ajaxSpy({
-                throttle: opts.throttle,
+                throttle: opts.throttle || 200,
                 context: context,
-                id: frame.id
+                id: id || 'top'
             });
             context.Image = imgSpy({
-                throttle: opts.throttle,
+                throttle: opts.throttle || 200,
                 context: context,
-                id: frame.id
+                id: id || 'top'
             });
         }
 
@@ -31,7 +35,7 @@ module.exports = function (opts) {
                 if (!frame.contentWindow.rcThrottled) {
                     spyList.push(frame.id);
                 }
-                invade(frame.contentWindow);
+                invade(frame.contentWindow, frame.id);
             } catch (err) {
                 log('Denied access to', frame);
             }
