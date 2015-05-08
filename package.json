@@ -1,0 +1,31 @@
+{
+  "name": "request-control",
+  "version": "1.0.0",
+  "description": "Fight back against the rising tide of http requests.",
+  "main": "src/core.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cobbdb/request-control.git"
+  },
+  "keywords": [
+    "http",
+    "request",
+    "iframe",
+    "image",
+    "tracking",
+    "pixel",
+    "swf",
+    "ajax",
+    "vendor",
+    "spam"
+  ],
+  "author": "Dan Cobb <cobbdb@gmail.com> (http://www.github.com/cobbdb)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cobbdb/request-control/issues"
+  },
+  "homepage": "https://github.com/cobbdb/request-control"
+}

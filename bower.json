@@ -1,0 +1,33 @@
+{
+  "name": "request-control",
+  "homepage": "https://github.com/cobbdb/request-control",
+  "authors": [
+    "Dan <cobbdb@gmail.com>"
+  ],
+  "description": "Fight back against the rising tide of http requests.",
+  "main": "dist/reqctrl.min.js",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "http",
+    "request",
+    "iframe",
+    "image",
+    "tracking",
+    "pixel",
+    "swf",
+    "ajax",
+    "vendor",
+    "spam"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
