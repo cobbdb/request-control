@@ -4,11 +4,12 @@
     <script src="requester.js"></script>
     <script>
         // req/sec
-        top.throttle404 = 1;
+        top.throttle404 = 5;
         function setit() {
             setTimeout(function () {
                 console.log('### 404');
                 dorequest('bad.url', '<404frame>');
+                new Image().src = 'bad.image';
                 setit();
             }, 1000 / top.throttle404);
         }
