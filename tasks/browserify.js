@@ -16,11 +16,11 @@ module.exports = function (grunt) {
         browserify: {
             global: {
                 files: {
-                    'bin/harmony.js': 'src/harmony.js'
+                    'bin/reqctrl.js': 'src/reqctrl.js'
                 },
                 options: {
                     browserifyOptions: {
-                        standalone: 'Harmony'
+                        standalone: 'RequestControl'
                     }
                 }
             },
