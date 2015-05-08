@@ -1,0 +1,6 @@
+static tags:
+    <object stuff>
+
+dynamic tags:
+    createElement('object').setAttribute('stuff');
+    createElement('div').innerHTML = '<object stuff>';

@@ -48,13 +48,13 @@ function makeAjax(frameWindow, id) {
     }, 10000);
     return function (args) {
         var req, oldsend;
-        frameWindow.ajaxReqs.allowance += 1;
-        frameWindow.ajaxReqs.rps.attempted += 1;
-        frameWindow.ajaxReqs.net.attempted += 1;
         req = new oldajax(args);
         oldsend = req.send;
         req.send = function () {
             var now;
+            frameWindow.ajaxReqs.allowance += 1;
+            frameWindow.ajaxReqs.rps.attempted += 1;
+            frameWindow.ajaxReqs.net.attempted += 1;
             if (frameWindow.ajaxReqs.allowance < throttle) {
                 frameWindow.timeOfLastRequest = Date.now();
                 oldsend.apply(req, arguments);

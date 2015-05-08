@@ -1,6 +1,6 @@
 {
-  "name": "request-control",
-  "version": "1.0.0",
+  "name": "request-control-js",
+  "version": "0.0.5",
   "description": "Fight back against the rising tide of http requests.",
   "main": "src/core.js",
   "scripts": {
@@ -34,5 +34,9 @@
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-contrib-uglify": "^0.9.1",
     "matchdep": "^0.3.0"
+  },
+  "dependencies": {
+    "baseclassjs": "^2.3.0",
+    "curb": "^1.0.1"
   }
 }
