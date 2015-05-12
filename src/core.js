@@ -1,5 +1,6 @@
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
+    createSpy = require('./create-spy.js'),
     log = require('./log.js');
 
 /**
@@ -14,19 +15,21 @@ module.exports = function (opts) {
         len = context.frames.length;
 
         // Place spies.
-        if (!context.rcThrottled) {
-            context.rcThrottled = true;
-            context.XMLHttpRequest = ajaxSpy({
-                throttle: opts.throttle || 200,
-                context: context,
-                id: id || 'top'
-            });
-            context.Image = imgSpy({
-                throttle: opts.throttle || 200,
-                context: context,
-                id: id || 'top'
-            });
-        }
+        context.XMLHttpRequest = ajaxSpy({
+            throttle: opts.throttle || 200,
+            context: context,
+            id: id || 'top'
+        });
+        context.Image = imgSpy({
+            throttle: opts.throttle || 200,
+            context: context,
+            id: id || 'top'
+        });
+        context.document.createElement = createSpy({
+            throttle: opts.throttle || 200,
+            context: context,
+            id: id || 'top'
+        });
 
         // Invade any iframes as well.
         for (i = 0; i < len; i += 1) {
@@ -43,6 +46,7 @@ module.exports = function (opts) {
     }
 
     if (!global.rcThrottled) {
+        invade();
         global.setInterval(invade, 5000);
     }
 

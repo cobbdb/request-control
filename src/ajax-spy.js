@@ -8,27 +8,30 @@ var Stats = require('./spy-stat-block.js'),
  * @return {Function} Imposter XMLHttpRequest constructor.
  */
 module.exports = function (opts) {
-    var stats = Stats(opts),
-        oldajax = opts.context.XMLHttpRequest;
+    var oldajax = opts.context.XMLHttpRequest;
+    opts.context.rcAjaxStats = opts.context.rcAjaxStats || Stats(opts);
+    opts.type = 'AJAX';
     /**
      * @return {XMLHttpRequest}
      */
     return function (args) {
         var req = new oldajax(args),
-            oldsend = req.send;
+            oldsend = req.send,
+            stats = opts.context.rcAjaxStats;
         req.send = function () {
             var now = Date.now(),
                 firstReq = !opts.context.rcLastAjaxReq,
-                greenLight = now - opts.context.rcLastAjaxReq < opts.throttle;
+                greenLight = now - opts.context.rcLastAjaxReq > opts.throttle;
             stats.rps.attempted += 1;
             stats.net.attempted += 1;
             if (firstReq || greenLight) {
                 stats.rps.made += 1;
                 stats.net.made += 1;
-                opts.context.rcLastAjaxReq = Date.now();
+                opts.context.rcLastAjaxReq = now;
+                log('>>> <Ajax> request allowed', opts.id);
                 oldsend.apply(req, arguments);
             } else {
-                log('>>> <Ajax> request blocked!', opts.id);
+                //log('>>> <Ajax> request blocked!', opts.id);
             }
         };
         req.addEventListener('load', function () {

@@ -2,18 +2,30 @@
 <html>
 <head>
     <script src="requester.js"></script>
+</head>
+<body>
     <script>
         // req/sec
-        top.throttle200 = 1;
+        top.throttle200 = 0.5;
         function setit() {
             setTimeout(function () {
-                console.log('### 200');
-                dorequest('external.js', '<200frame>');
+                dorequest(
+                    'external.js?' + Math.random(),
+                    '<200frame>'
+                );
+                var el = document.createElement('div');
+                el.innerHTML = 'this is new div';
+                document.body.appendChild(el);
+                var el = document.createElement('object');
+                el.setAttribute('data', 'external.swf?' + Math.random());
+                document.body.appendChild(el);
+                var el = document.createElement('div');
+                el.innerHTML = '<object data="external.swf?' + Math.random() + '"></object>';
+                document.body.appendChild(el);
                 setit();
             }, 1000 / top.throttle200);
         }
         setit();
     </script>
-</head>
-<body></body>
+</body>
 </html>

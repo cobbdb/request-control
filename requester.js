@@ -2,7 +2,7 @@ function dorequest(url, sigel) {
     var req = new XMLHttpRequest(),
         logit = function () {
             [].unshift.call(arguments, sigel);
-            console.log.apply(console, arguments);
+            //console.log.apply(console, arguments);
         };
     req.open('GET', url, false);
     req.addEventListener('load', function (event) {

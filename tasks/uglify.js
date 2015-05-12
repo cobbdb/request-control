@@ -3,7 +3,7 @@ module.exports = function (grunt) {
         uglify: {
             build: {
                 files: {
-                    'dist/reqctrl.min.js': 'bin/reqctrl.js'
+                    'dist/reqctrl.min.js': 'dist/reqctrl.js'
                 }
             }
         }

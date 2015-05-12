@@ -2,19 +2,22 @@
 <html>
 <head>
     <script src="requester.js"></script>
+</head>
+<body>
     <script>
         // req/sec
         top.throttle404 = 5;
         function setit() {
             setTimeout(function () {
-                console.log('### 404');
                 dorequest('bad.url', '<404frame>');
                 new Image().src = 'bad.image';
+                var el = document.createElement('object');
+                el.setAttribute('data', 'missing.swf');
+                document.body.appendChild(el);
                 setit();
             }, 1000 / top.throttle404);
         }
-        setit();
+        //setit();
     </script>
-</head>
-<body></body>
+</body>
 </html>

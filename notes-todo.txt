@@ -1,6 +1,6 @@
 static tags:
-    <object stuff>
+    <object data="url">
 
 dynamic tags:
-    createElement('object').setAttribute('stuff');
-    createElement('div').innerHTML = '<object stuff>';
+    createElement('object').setAttribute('data', 'url');
+    createElement('div').innerHTML = '<object' + ' data="url"' + '>';

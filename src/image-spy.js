@@ -8,24 +8,27 @@ var Stats = require('./spy-stat-block.js'),
  * @return {Function} Imposter Image constructor.
  */
 module.exports = function (opts) {
-    var stats = Stats(opts),
-        oldimage = opts.context.Image;
+    var oldimage = opts.context.Image;
+    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
+    opts.type = 'IMG';
     /**
      * @return {Object} Valid Image instance or empty generic.
      */
     return function (width, height) {
         var now = Date.now(),
             firstReq = !opts.context.rcLastImgReq,
-            greenLight = now - opts.context.rcLastImgReq < opts.throttle;
+            greenLight = now - opts.context.rcLastImgReq > opts.throttle,
+            stats = opts.context.rcImageStats;
         stats.rps.attempted += 1;
         stats.net.attempted += 1;
         if (firstReq || greenLight) {
             stats.rps.made += 1;
             stats.net.made += 1;
-            opts.context.rcLastImgReq = Date.now();
+            opts.context.rcLastImgReq = now;
+            log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
         } else {
-            log('>>> <Image> request blocked!', opts.id);
+            //log('>>> <Image> request blocked!', opts.id);
             return {};
         }
     };
