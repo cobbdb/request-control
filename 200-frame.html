@@ -17,10 +17,10 @@
                 el.innerHTML = 'this is new div';
                 document.body.appendChild(el);
                 var el = document.createElement('object');
-                el.setAttribute('data', 'external.swf?' + Math.random());
+                el.setAttribute('data', 'http://external.swf?' + Math.random());
                 document.body.appendChild(el);
                 var el = document.createElement('div');
-                el.innerHTML = '<object data="external.swf?' + Math.random() + '"></object>';
+                el.innerHTML = '<object data="http://external.swf?' + Math.random() + '"></object>';
                 document.body.appendChild(el);
                 setit();
             }, 1000 / top.throttle200);

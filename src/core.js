@@ -1,6 +1,7 @@
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     createSpy = require('./create-spy.js'),
+    appendSpy = require('./append-spy.js'),
     log = require('./log.js');
 
 /**
@@ -25,7 +26,12 @@ module.exports = function (opts) {
             context: context,
             id: id || 'top'
         });
-        context.document.createElement = createSpy({
+        /*context.document.createElement = createSpy({
+            throttle: opts.throttle || 200,
+            context: context,
+            id: id || 'top'
+        });*/
+        context.Element.prototype.appendChild = appendSpy({
             throttle: opts.throttle || 200,
             context: context,
             id: id || 'top'

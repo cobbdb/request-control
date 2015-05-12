@@ -9,8 +9,8 @@ var Stats = require('./spy-stat-block.js'),
  */
 module.exports = function (opts) {
     var oldimage = opts.context.Image;
-    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
     opts.type = 'IMG';
+    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
     /**
      * @return {Object} Valid Image instance or empty generic.
      */

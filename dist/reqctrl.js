@@ -54,11 +54,60 @@ module.exports = function (opts) {
     };
 };
 
-},{"./log.js":6,"./spy-stat-block.js":7}],3:[function(require,module,exports){
+},{"./log.js":7,"./spy-stat-block.js":8}],3:[function(require,module,exports){
+(function (global){
+var Stats = require('./spy-stat-block.js'),
+    log = require('./log.js'),
+    harness = global.document.createElement('div');
+
+/**
+ * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
+ * @param {Object} opts.context Window context.
+ * @param {String} opts.id ID of the frameElement.
+ * @return {Function} Imposter appendChild function.
+ */
+module.exports = function (opts) {
+    var oldappend = opts.context.Element.prototype.appendChild;
+    opts.type = 'Append';
+    opts.context.rcAppendStats = opts.context.rcAppendStats || Stats(opts);
+    /**
+     * @param {Element} child
+     * @return {Element} The appended child.
+     */
+    return function (child) {
+        var stats = opts.context.rcAppendStats,
+            now = Date.now(),
+            firstReq = !opts.context.rcLastAppendReq,
+            greenLight = now - opts.context.rcLastAppendReq > opts.throttle,
+            asText;
+        harness.innerHTML = '';
+        oldappend.call(harness, child);
+        asText = harness.innerHTML;
+        if (asText.indexOf('http') >= 0) {
+            stats.rps.attempted += 1;
+            stats.net.attempted += 1;
+            if (firstReq || greenLight) {
+                stats.rps.made += 1;
+                stats.net.made += 1;
+                opts.context.rcLastAppendReq = now;
+                log('>>> <Append> request allowed', opts.id);
+                return oldappend.call(this, child);
+            } else {
+                return child;
+            }
+        } else {
+            return oldappend.call(this, child);
+        }
+    };
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./log.js":7,"./spy-stat-block.js":8}],4:[function(require,module,exports){
 (function (global){
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     createSpy = require('./create-spy.js'),
+    appendSpy = require('./append-spy.js'),
     log = require('./log.js');
 
 /**
@@ -83,7 +132,12 @@ module.exports = function (opts) {
             context: context,
             id: id || 'top'
         });
-        context.document.createElement = createSpy({
+        /*context.document.createElement = createSpy({
+            throttle: opts.throttle || 200,
+            context: context,
+            id: id || 'top'
+        });*/
+        context.Element.prototype.appendChild = appendSpy({
             throttle: opts.throttle || 200,
             context: context,
             id: id || 'top'
@@ -112,7 +166,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ajax-spy.js":2,"./create-spy.js":4,"./image-spy.js":5,"./log.js":6}],4:[function(require,module,exports){
+},{"./ajax-spy.js":2,"./append-spy.js":3,"./create-spy.js":5,"./image-spy.js":6,"./log.js":7}],5:[function(require,module,exports){
 var Stats = require('./spy-stat-block.js'),
     log = require('./log.js');
 
@@ -124,8 +178,8 @@ var Stats = require('./spy-stat-block.js'),
  */
 module.exports = function (opts) {
     var oldcreate = opts.context.document.createElement;
-    opts.context.rcCreateStats = opts.context.rcCreateStats || Stats(opts);
     opts.type = 'Create';
+    opts.context.rcCreateStats = opts.context.rcCreateStats || Stats(opts);
     /**
      * @param {String} tagName
      * @return {Element}
@@ -133,10 +187,11 @@ module.exports = function (opts) {
     return function (tagName) {
         var now, firstReq, greenLight,
             stats = opts.context.rcCreateStats;
-        if (tagName.toLowerCase() === 'object') {
             now = Date.now();
             firstReq = !opts.context.rcLastCreateReq;
             greenLight = now - opts.context.rcLastCreateReq > opts.throttle;
+        tagName = tagName.toLowerCase();
+        if (tagName === 'object') {
             stats.rps.attempted += 1;
             stats.net.attempted += 1;
             if (firstReq || greenLight) {
@@ -149,13 +204,14 @@ module.exports = function (opts) {
                 //log('>>> <Object/SWF> request blocked!', opts.id);
                 return oldcreate.call(opts.context.document, 'span');
             }
+        } else if (tagName === 'div') {
         } else {
             return oldcreate.call(opts.context.document, tagName);
         }
     };
 };
 
-},{"./log.js":6,"./spy-stat-block.js":7}],5:[function(require,module,exports){
+},{"./log.js":7,"./spy-stat-block.js":8}],6:[function(require,module,exports){
 var Stats = require('./spy-stat-block.js'),
     log = require('./log.js');
 
@@ -167,8 +223,8 @@ var Stats = require('./spy-stat-block.js'),
  */
 module.exports = function (opts) {
     var oldimage = opts.context.Image;
-    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
     opts.type = 'IMG';
+    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
     /**
      * @return {Object} Valid Image instance or empty generic.
      */
@@ -192,7 +248,7 @@ module.exports = function (opts) {
     };
 };
 
-},{"./log.js":6,"./spy-stat-block.js":7}],6:[function(require,module,exports){
+},{"./log.js":7,"./spy-stat-block.js":8}],7:[function(require,module,exports){
 (function (global){
 global.top.rcDebug = true;
 
@@ -203,7 +259,7 @@ module.exports = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 var StatNode = require('./spy-stat-node.js'),
     log = require('./log.js');
@@ -246,7 +302,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":6,"./spy-stat-node.js":8}],8:[function(require,module,exports){
+},{"./log.js":7,"./spy-stat-node.js":9}],9:[function(require,module,exports){
 var $ = require('curb');
 
 module.exports = function () {
@@ -263,5 +319,5 @@ module.exports = function () {
     };
 };
 
-},{"curb":1}]},{},[3])(3)
+},{"curb":1}]},{},[4])(4)
 });

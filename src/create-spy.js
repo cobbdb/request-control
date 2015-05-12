@@ -9,8 +9,8 @@ var Stats = require('./spy-stat-block.js'),
  */
 module.exports = function (opts) {
     var oldcreate = opts.context.document.createElement;
-    opts.context.rcCreateStats = opts.context.rcCreateStats || Stats(opts);
     opts.type = 'Create';
+    opts.context.rcCreateStats = opts.context.rcCreateStats || Stats(opts);
     /**
      * @param {String} tagName
      * @return {Element}
