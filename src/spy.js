@@ -11,6 +11,8 @@ module.exports = function (opts) {
     var oldajax = opts.context.XMLHttpRequest;
     opts.type = 'AJAX';
     opts.context.rcAjaxStats = opts.context.rcAjaxStats || Stats(opts);
+
+    var spy = Spy(opts.context.XMLHttpRequest, 'AJAX');
     /**
      * @return {XMLHttpRequest}
      */

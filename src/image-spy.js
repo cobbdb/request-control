@@ -1,4 +1,4 @@
-var Stats = require('./spy-stat-block.js'),
+var Stats = require('./stat-set.js'),
     log = require('./log.js');
 
 /**
