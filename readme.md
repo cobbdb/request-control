@@ -25,12 +25,20 @@ Nope! Since this is only a throttle, video metrics will still be reported from v
 Request Control is intended to throttle malicious reporting - which may make upwards of 10 http requests per second! At roughly 100KB per request this can add up to some *very* expensive site visits for your mobile customers.
 
 ### Using the Throttle
-To load Request Control on your site, simply include the built script from `dist/reqctrl.min.js` and then start the throttle when you're ready to enforce a request speed limit.
+To load Request Control on your site, simply include the built script from `dist/reqctrl.min.js` and then start the throttle when you're ready to enforce a request speed limit. Request Control will automatically reapply the throttle when possible in any iframes for you.
+
+You can install the JS global object with `bower install request-control`.
 ```html
 <script src="path/to/reqctrl.min.js"></script>
 <script>
     RequestControl();
 </script>
+```
+
+Request Control is also provided as a CommonJS module with `npm install request-control-js`.
+```javascript
+var Throttle = require('request-control-js');
+Throttle();
 ```
 
 ### Configuration
