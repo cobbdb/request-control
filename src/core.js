@@ -1,54 +1,41 @@
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
-    log = require('./log.js');
+    log = require('./log.js'),
+    hash;
 
 /**
  * @param {Number} [opts.throttle]
  */
 module.exports = function (opts) {
-    var spyList = [];
     opts = opts || {};
     function invade(context, id) {
         var i, frame, len;
         context = context || global.self;
-        len = context.frames.length;
+
+        opts.context = context;
+        opts.id = id || 'top';
 
         // Place spies.
-        context.XMLHttpRequest = ajaxSpy({
-            throttle: opts.throttle || 1000,
-            context: context,
-            id: id || 'top'
-        });
-        context.Image = imgSpy({
-            throttle: opts.throttle || 1000,
-            context: context,
-            id: id || 'top'
-        });
-        context.Element.prototype.appendChild = appendSpy({
-            throttle: opts.throttle || 1000,
-            context: context,
-            id: id || 'top'
-        });
+        context.XMLHttpRequest = ajaxSpy(opts);
+        context.Image = imgSpy(opts);
+        context.Element.prototype.appendChild = appendSpy(opts);
 
         // Invade any iframes as well.
+        len = context.frames.length;
         for (i = 0; i < len; i += 1) {
             try {
                 frame = context.frames[i].frameElement;
-                if (!frame.contentWindow.rcThrottled) {
-                    spyList.push(frame.id);
-                }
                 invade(frame.contentWindow, frame.id);
             } catch (err) {
-                log('Denied access to', frame);
+                log('Denied access to', frame, err);
             }
         }
     }
 
-    if (!global.rcThrottled) {
+    // Run and reapply every 10sec to catch new frames.
+    if (!hash) {
         invade();
-        global.setInterval(invade, 5000);
+        hash = global.setInterval(invade, 10000);
     }
-
-    return spyList;
 };

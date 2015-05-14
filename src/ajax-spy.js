@@ -1,6 +1,6 @@
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    Gate = require('./gate.js');
+    RequestGate = require('./request-gate.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -10,30 +10,20 @@ var Stats = require('./stat-set.js'),
  */
 module.exports = function (opts) {
     var oldajax = opts.context.XMLHttpRequest,
-        gate = Gate(opts);
-    opts.type = 'AJAX';
-    opts.context.rcAjaxStats = opts.context.rcAjaxStats || Stats(opts);
+        gate = RequestGate('AJAX', opts);
 
     /**
      * @return {XMLHttpRequest}
      */
     return function (args) {
         var req = new oldajax(args),
-            oldsend = req.send,
-            stats = opts.context.rcAjaxStats;
+            oldsend = req.send;
         req.send = function () {
-            stats.count.attempted();
-            if (gate.isOpen()) {
-                gate.close();
-                stats.count.made();
+            if (gate.check()) {
                 log('>>> <Ajax> request allowed', opts.id);
                 oldsend.apply(req, arguments);
             }
         };
-        req.addEventListener('load', function () {
-            stats[req.status] = stats[req.status] || 0;
-            stats[req.status] += 1;
-        }, false);
         return req;
     };
 };

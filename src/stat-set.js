@@ -1,11 +1,13 @@
 var $ = require('curb'),
-    StatNode = require('./spy-stat-node.js'),
+    StatNode = require('./stat-node.js'),
     log = require('./log.js');
 
 /**
+ * @param {String} name
+ * @param {String} id Element id of parent frame.
  * @return {Object}
  */
-module.exports = function (opts) {
+module.exports = function (name, id) {
     var block = {
             rps: StatNode(),
             net: StatNode(),
@@ -29,17 +31,17 @@ module.exports = function (opts) {
         rpsLastMade = block.net.made;
         rpsLastAttempted = block.net.attempted;
     }, 1000);
-    if (global.top.rcDebug) {
-        global.setInterval(function () {
+    global.setInterval(function () {
+        if (global.top.rcDebug) {
             if (block.net.attempted > 0) {
                 log(
                     '\tnet requests',
-                    opts.id,
-                    opts.type,
+                    id,
+                    name,
                     block.net.toString()
                 );
             }
-        }, 9000);
-    }
+        }
+    }, 9000);
     return block;
 };
