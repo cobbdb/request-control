@@ -22,7 +22,7 @@ module.exports = function (name, opts) {
         check: function () {
             var now = global.Date.now(),
                 firstReq = !opts.context.rcLast[name],
-                greenLight = now - opts.context.rcLast[name] > throttle;
+                greenLight = now - opts.context.rcLast[name] > opts.throttle;
             opts.context.rcStats[name].count.attempted();
             if (firstReq || greenLight) {
                 this.close();

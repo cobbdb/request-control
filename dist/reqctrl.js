@@ -10,8 +10,9 @@ module.exports = function () {
 };
 
 },{}],2:[function(require,module,exports){
-var Stats = require('./spy-stat-block.js'),
-    log = require('./log.js');
+var Stats = require('./stat-set.js'),
+    log = require('./log.js'),
+    RequestGate = require('./request-gate.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -20,45 +21,31 @@ var Stats = require('./spy-stat-block.js'),
  * @return {Function} Imposter XMLHttpRequest constructor.
  */
 module.exports = function (opts) {
-    var oldajax = opts.context.XMLHttpRequest;
-    opts.context.rcAjaxStats = opts.context.rcAjaxStats || Stats(opts);
-    opts.type = 'AJAX';
+    var oldajax = opts.context.XMLHttpRequest,
+        gate = RequestGate('AJAX', opts);
+
     /**
      * @return {XMLHttpRequest}
      */
     return function (args) {
         var req = new oldajax(args),
-            oldsend = req.send,
-            stats = opts.context.rcAjaxStats;
+            oldsend = req.send;
         req.send = function () {
-            var now = Date.now(),
-                firstReq = !opts.context.rcLastAjaxReq,
-                greenLight = now - opts.context.rcLastAjaxReq > opts.throttle;
-            stats.rps.attempted += 1;
-            stats.net.attempted += 1;
-            if (firstReq || greenLight) {
-                stats.rps.made += 1;
-                stats.net.made += 1;
-                opts.context.rcLastAjaxReq = now;
+            if (gate.check()) {
                 log('>>> <Ajax> request allowed', opts.id);
                 oldsend.apply(req, arguments);
-            } else {
-                //log('>>> <Ajax> request blocked!', opts.id);
             }
         };
-        req.addEventListener('load', function () {
-            stats[req.status] = stats[req.status] || 0;
-            stats[req.status] += 1;
-        }, false);
         return req;
     };
 };
 
-},{"./log.js":7,"./spy-stat-block.js":8}],3:[function(require,module,exports){
+},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],3:[function(require,module,exports){
 (function (global){
-var Stats = require('./spy-stat-block.js'),
+var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    harness = global.document.createElement('div');
+    harness = global.document.createElement('div'),
+    RequestGate = require('./request-gate.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -67,30 +54,21 @@ var Stats = require('./spy-stat-block.js'),
  * @return {Function} Imposter appendChild function.
  */
 module.exports = function (opts) {
-    var oldappend = opts.context.Element.prototype.appendChild;
-    opts.type = 'Append';
-    opts.context.rcAppendStats = opts.context.rcAppendStats || Stats(opts);
+    var oldappend = opts.context.Element.prototype.appendChild,
+        gate = RequestGate('DomAppend', opts);
+
     /**
      * @param {Element} child
      * @return {Element} The appended child.
      */
     return function (child) {
-        var stats = opts.context.rcAppendStats,
-            now = Date.now(),
-            firstReq = !opts.context.rcLastAppendReq,
-            greenLight = now - opts.context.rcLastAppendReq > opts.throttle,
-            asText;
+        var asText;
         harness.innerHTML = '';
         oldappend.call(harness, child);
         asText = harness.innerHTML;
         if (asText.indexOf('http') >= 0) {
-            stats.rps.attempted += 1;
-            stats.net.attempted += 1;
-            if (firstReq || greenLight) {
-                stats.rps.made += 1;
-                stats.net.made += 1;
-                opts.context.rcLastAppendReq = now;
-                log('>>> <Append> request allowed', opts.id);
+            if (gate.check()) {
+                log('>>> <DomAppend> request allowed', opts.id);
                 return oldappend.call(this, child);
             } else {
                 return child;
@@ -102,118 +80,55 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":7,"./spy-stat-block.js":8}],4:[function(require,module,exports){
+},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],4:[function(require,module,exports){
 (function (global){
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
-    createSpy = require('./create-spy.js'),
     appendSpy = require('./append-spy.js'),
-    log = require('./log.js');
+    log = require('./log.js'),
+    hash;
 
 /**
  * @param {Number} [opts.throttle]
  */
 module.exports = function (opts) {
-    var spyList = [];
     opts = opts || {};
     function invade(context, id) {
         var i, frame, len;
         context = context || global.self;
-        len = context.frames.length;
+
+        opts.context = context;
+        opts.id = id || 'top';
 
         // Place spies.
-        context.XMLHttpRequest = ajaxSpy({
-            throttle: opts.throttle || 200,
-            context: context,
-            id: id || 'top'
-        });
-        context.Image = imgSpy({
-            throttle: opts.throttle || 200,
-            context: context,
-            id: id || 'top'
-        });
-        /*context.document.createElement = createSpy({
-            throttle: opts.throttle || 200,
-            context: context,
-            id: id || 'top'
-        });*/
-        context.Element.prototype.appendChild = appendSpy({
-            throttle: opts.throttle || 200,
-            context: context,
-            id: id || 'top'
-        });
+        context.XMLHttpRequest = ajaxSpy(opts);
+        context.Image = imgSpy(opts);
+        context.Element.prototype.appendChild = appendSpy(opts);
 
         // Invade any iframes as well.
+        len = context.frames.length;
         for (i = 0; i < len; i += 1) {
             try {
                 frame = context.frames[i].frameElement;
-                if (!frame.contentWindow.rcThrottled) {
-                    spyList.push(frame.id);
-                }
                 invade(frame.contentWindow, frame.id);
             } catch (err) {
-                log('Denied access to', frame);
+                log('Denied access to', frame, err);
             }
         }
     }
 
-    if (!global.rcThrottled) {
+    // Run and reapply every 10sec to catch new frames.
+    if (!hash) {
         invade();
-        global.setInterval(invade, 5000);
+        hash = global.setInterval(invade, 10000);
     }
-
-    return spyList;
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ajax-spy.js":2,"./append-spy.js":3,"./create-spy.js":5,"./image-spy.js":6,"./log.js":7}],5:[function(require,module,exports){
-var Stats = require('./spy-stat-block.js'),
-    log = require('./log.js');
-
-/**
- * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
- * @param {Object} opts.context Window context.
- * @param {String} opts.id ID of the frameElement.
- * @return {Function} Imposter createElement function.
- */
-module.exports = function (opts) {
-    var oldcreate = opts.context.document.createElement;
-    opts.type = 'Create';
-    opts.context.rcCreateStats = opts.context.rcCreateStats || Stats(opts);
-    /**
-     * @param {String} tagName
-     * @return {Element}
-     */
-    return function (tagName) {
-        var now, firstReq, greenLight,
-            stats = opts.context.rcCreateStats;
-            now = Date.now();
-            firstReq = !opts.context.rcLastCreateReq;
-            greenLight = now - opts.context.rcLastCreateReq > opts.throttle;
-        tagName = tagName.toLowerCase();
-        if (tagName === 'object') {
-            stats.rps.attempted += 1;
-            stats.net.attempted += 1;
-            if (firstReq || greenLight) {
-                stats.rps.made += 1;
-                stats.net.made += 1;
-                opts.context.rcLastCreateReq = now;
-                log('>>> <Object/SWF> request allowed', opts.id);
-                return oldcreate.call(opts.context.document, tagName);
-            } else {
-                //log('>>> <Object/SWF> request blocked!', opts.id);
-                return oldcreate.call(opts.context.document, 'span');
-            }
-        } else if (tagName === 'div') {
-        } else {
-            return oldcreate.call(opts.context.document, tagName);
-        }
-    };
-};
-
-},{"./log.js":7,"./spy-stat-block.js":8}],6:[function(require,module,exports){
-var Stats = require('./spy-stat-block.js'),
-    log = require('./log.js');
+},{"./ajax-spy.js":2,"./append-spy.js":3,"./image-spy.js":5,"./log.js":6}],5:[function(require,module,exports){
+var Stats = require('./stat-set.js'),
+    log = require('./log.js'),
+    RequestGate = require('./request-gate.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -222,33 +137,24 @@ var Stats = require('./spy-stat-block.js'),
  * @return {Function} Imposter Image constructor.
  */
 module.exports = function (opts) {
-    var oldimage = opts.context.Image;
-    opts.type = 'IMG';
-    opts.context.rcImageStats = opts.context.rcImageStats || Stats(opts);
+    var oldimage = opts.context.Image,
+        gate = RequestGate('Image', opts);
+
     /**
+     * @param {Number} [width]
+     * @param {Number} [height]
      * @return {Object} Valid Image instance or empty generic.
      */
     return function (width, height) {
-        var now = Date.now(),
-            firstReq = !opts.context.rcLastImgReq,
-            greenLight = now - opts.context.rcLastImgReq > opts.throttle,
-            stats = opts.context.rcImageStats;
-        stats.rps.attempted += 1;
-        stats.net.attempted += 1;
-        if (firstReq || greenLight) {
-            stats.rps.made += 1;
-            stats.net.made += 1;
-            opts.context.rcLastImgReq = now;
+        if (gate.check()) {
             log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
-        } else {
-            //log('>>> <Image> request blocked!', opts.id);
-            return {};
         }
+        return {};
     };
 };
 
-},{"./log.js":7,"./spy-stat-block.js":8}],7:[function(require,module,exports){
+},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],6:[function(require,module,exports){
 (function (global){
 global.top.rcDebug = true;
 
@@ -259,50 +165,54 @@ module.exports = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function (global){
-var StatNode = require('./spy-stat-node.js'),
-    log = require('./log.js');
+var StatSet = require('./stat-set.js');
 
 /**
- * @param {String} opts.id ID of the frameElement.
- * @param {String} opts.type
- * @param {Boolean} opts.debug True to enable console logging.
+ * @param {String} name Unique identifier for this gate.
+ * @param {Number} [opts.throttle] Defaults to 1000 milliseconds.
+ * @param {String} opts.id Element id of parent frame.
+ * @param {Window} opts.context
+ * @return {Object}
  */
-module.exports = function (opts) {
-    var block = {
-        rps: StatNode(),
-        net: StatNode()
+module.exports = function (name, opts) {
+    opts.throttle = opts.throttle || 1000;
+
+    opts.context.rcStats = opts.context.rcStats || {};
+    opts.context.rcStats[name] = opts.context.rcStats[name] || StatSet(name, opts.id);
+    opts.context.rcLast = opts.context.rcLast || {};
+    opts.context.rcLast[name] = opts.context.rcLast[name] || 0;
+
+    return {
+        /**
+         * @return {Boolean}
+         */
+        check: function () {
+            var now = global.Date.now(),
+                firstReq = !opts.context.rcLast[name],
+                greenLight = now - opts.context.rcLast[name] > opts.throttle;
+            opts.context.rcStats[name].count.attempted();
+            if (firstReq || greenLight) {
+                this.close();
+                opts.context.rcStats[name].count.made();
+                return true;
+            }
+            return false;
+        },
+        close: function () {
+            opts.context.rcLast[name] = global.Date.now();
+        },
+        open: function () {
+            opts.context.rcLast[name] = 0;
+        },
+        stats: opts.context.rcStats[name]
     };
-    if (global.top.rcDebug) {
-        global.setInterval(function () {
-            if (block.rps.attempted > 0) {
-                /*log(
-                    'requests/second',
-                    opts.id,
-                    opts.type,
-                    block.rps.toString()
-                );*/
-            }
-            block.rps.made = 0;
-            block.rps.attempted = 0;
-        }, 1000);
-        global.setInterval(function () {
-            if (block.net.attempted > 0) {
-                log(
-                    '\tnet requests',
-                    opts.id,
-                    opts.type,
-                    block.net.toString()
-                );
-            }
-        }, 9000);
-    }
-    return block;
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":7,"./spy-stat-node.js":9}],9:[function(require,module,exports){
+},{"./stat-set.js":9}],8:[function(require,module,exports){
+(function (global){
 var $ = require('curb');
 
 module.exports = function () {
@@ -313,11 +223,63 @@ module.exports = function () {
             return $('(made/attempted) %s/%s %s%',
                 this.made,
                 this.attempted,
-                (!this.attempted) ? 0 : Math.round(this.made / this.attempted * 100)
+                (!this.attempted) ? 0 : global.Math.round(this.made / this.attempted * 100)
             );
         }
     };
 };
 
-},{"curb":1}]},{},[4])(4)
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"curb":1}],9:[function(require,module,exports){
+(function (global){
+var $ = require('curb'),
+    StatNode = require('./stat-node.js'),
+    log = require('./log.js');
+
+/**
+ * @param {String} name
+ * @param {String} id Element id of parent frame.
+ * @return {Object}
+ */
+module.exports = function (name, id) {
+    var block = {
+            rps: StatNode(),
+            net: StatNode(),
+            count: {
+                made: function () {
+                    block.rps.made += 1;
+                    block.net.made += 1;
+                },
+                attempted: function () {
+                    block.rps.attempted += 1;
+                    block.net.attempted += 1;
+                }
+            }
+        },
+        rpsLastMade = 0,
+        rpsLastAttempted = 0;
+    global.setInterval(function () {
+        // Update rps counter.
+        block.rps.made = block.net.made - rpsLastMade;
+        block.rps.attempted = block.net.attempted - rpsLastAttempted;
+        rpsLastMade = block.net.made;
+        rpsLastAttempted = block.net.attempted;
+    }, 1000);
+    global.setInterval(function () {
+        if (global.top.rcDebug) {
+            if (block.net.attempted > 0) {
+                log(
+                    '\tnet requests',
+                    id,
+                    name,
+                    block.net.toString()
+                );
+            }
+        }
+    }, 9000);
+    return block;
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./log.js":6,"./stat-node.js":8,"curb":1}]},{},[4])(4)
 });
