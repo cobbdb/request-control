@@ -1,4 +1,4 @@
-[![Request Control](http://i.imgur.com/DP1OvVj.png)](https://github.com/cobbdb/request-control)
+[![Request Control](http://i.imgur.com/xrtq29k.png)](https://github.com/cobbdb/request-control)
 
 [![Bower version](https://badge.fury.io/bo/request-control.svg)](http://badge.fury.io/bo/request-control) [![NPM version](https://badge.fury.io/js/request-control-js.svg)](http://badge.fury.io/js/request-control-js)
 
