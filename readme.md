@@ -62,6 +62,17 @@ RequestControl({
 });
 ```
 
+### Stopping the Throttle
+After the throttle has been started, you can turn it off with the callable that is
+returned when you first started the system.
+```javascript
+// Start the throttle.
+var halt = RequestControl();
+
+// Some time later, stop the throttle.
+halt();
+```
+
 ---------
 * See: http://cobbdb.github.io/request-control
 * See: http://github.com/cobbdb/request-control
