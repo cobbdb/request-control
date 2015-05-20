@@ -1,7 +1,8 @@
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     harness = global.document.createElement('div'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -27,6 +28,7 @@ module.exports = function (opts) {
                 log('>>> <DomAppend> request allowed', opts.id);
                 return oldappend.call(this, child);
             } else {
+                mark(opts.id);
                 return child;
             }
         } else {

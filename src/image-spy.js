@@ -1,6 +1,7 @@
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -21,6 +22,8 @@ module.exports = function (opts) {
         if (gate.check()) {
             log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
+        } else {
+            mark(opts.id);
         }
         return {};
     };

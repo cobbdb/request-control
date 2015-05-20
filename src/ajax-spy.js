@@ -1,8 +1,10 @@
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
+ * # Ajax Spy
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
@@ -22,6 +24,8 @@ module.exports = function (opts) {
             if (gate.check()) {
                 log('>>> <Ajax> request allowed', opts.id);
                 oldsend.apply(req, arguments);
+            } else {
+                mark(opts.id);
             }
         };
         return req;

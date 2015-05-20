@@ -1,3 +1,8 @@
+/**
+ * # Request Control
+ * ### ***Throttle aggressive 3rd party http requests***
+ */
+
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
@@ -5,7 +10,10 @@ var ajaxSpy = require('./ajax-spy.js'),
     hash;
 
 /**
+ * ## RequestControl([opts])
+ * Starts the system.
  * @param {Number} [opts.throttle]
+ * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
     opts = opts || {};
@@ -38,4 +46,12 @@ module.exports = function (opts) {
         invade();
         hash = global.setInterval(invade, 10000);
     }
+
+    /**
+     * ## Stop()
+     * Stops RequestControl from invading new frames.
+     */
+    return function () {
+        global.clearInterval(hash);
+    };
 };

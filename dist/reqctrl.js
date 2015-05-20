@@ -12,9 +12,11 @@ module.exports = function () {
 },{}],2:[function(require,module,exports){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
+ * # Ajax Spy
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
@@ -34,18 +36,21 @@ module.exports = function (opts) {
             if (gate.check()) {
                 log('>>> <Ajax> request allowed', opts.id);
                 oldsend.apply(req, arguments);
+            } else {
+                mark(opts.id);
             }
         };
         return req;
     };
 };
 
-},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],3:[function(require,module,exports){
+},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],3:[function(require,module,exports){
 (function (global){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     harness = global.document.createElement('div'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -71,6 +76,7 @@ module.exports = function (opts) {
                 log('>>> <DomAppend> request allowed', opts.id);
                 return oldappend.call(this, child);
             } else {
+                mark(opts.id);
                 return child;
             }
         } else {
@@ -80,8 +86,13 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],4:[function(require,module,exports){
+},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],4:[function(require,module,exports){
 (function (global){
+/**
+ * # Request Control
+ * ### ***Throttle aggressive 3rd party http requests***
+ */
+
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
@@ -89,7 +100,10 @@ var ajaxSpy = require('./ajax-spy.js'),
     hash;
 
 /**
+ * ## RequestControl([opts])
+ * Starts the system.
  * @param {Number} [opts.throttle]
+ * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
     opts = opts || {};
@@ -122,13 +136,22 @@ module.exports = function (opts) {
         invade();
         hash = global.setInterval(invade, 10000);
     }
+
+    /**
+     * ## Stop()
+     * Stops RequestControl from invading new frames.
+     */
+    return function () {
+        global.clearInterval(hash);
+    };
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./ajax-spy.js":2,"./append-spy.js":3,"./image-spy.js":5,"./log.js":6}],5:[function(require,module,exports){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
-    RequestGate = require('./request-gate.js');
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js');
 
 /**
  * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
@@ -149,12 +172,14 @@ module.exports = function (opts) {
         if (gate.check()) {
             log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
+        } else {
+            mark(opts.id);
         }
         return {};
     };
 };
 
-},{"./log.js":6,"./request-gate.js":7,"./stat-set.js":9}],6:[function(require,module,exports){
+},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],6:[function(require,module,exports){
 (function (global){
 global.top.rcDebug = true;
 
@@ -167,22 +192,36 @@ module.exports = function () {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],7:[function(require,module,exports){
 (function (global){
+/**
+ * # Marker
+ * Outlines any element with a red border.
+ * @param {String} id Element ID.
+ */
+module.exports = function (id) {
+    var el = global.top.document.getElementById(id);
+    el.style.border = '4px solid red';
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],8:[function(require,module,exports){
+(function (global){
 var StatSet = require('./stat-set.js');
 
 /**
  * @param {String} name Unique identifier for this gate.
  * @param {Number} [opts.throttle] Defaults to 1000 milliseconds.
  * @param {String} opts.id Element id of parent frame.
- * @param {Window} opts.context
+ * @param {Window} [opts.context]
  * @return {Object}
  */
 module.exports = function (name, opts) {
-    opts.throttle = opts.throttle || 1000;
+    var throttle = opts.throttle || 1000,
+        context = opts.context || global.self;
 
-    opts.context.rcStats = opts.context.rcStats || {};
-    opts.context.rcStats[name] = opts.context.rcStats[name] || StatSet(name, opts.id);
-    opts.context.rcLast = opts.context.rcLast || {};
-    opts.context.rcLast[name] = opts.context.rcLast[name] || 0;
+    context.rcStats = context.rcStats || {};
+    context.rcStats[name] = context.rcStats[name] || StatSet(name, opts.id);
+    context.rcLast = context.rcLast || {};
+    context.rcLast[name] = context.rcLast[name] || 0;
 
     return {
         /**
@@ -190,28 +229,28 @@ module.exports = function (name, opts) {
          */
         check: function () {
             var now = global.Date.now(),
-                firstReq = !opts.context.rcLast[name],
-                greenLight = now - opts.context.rcLast[name] > opts.throttle;
-            opts.context.rcStats[name].count.attempted();
+                firstReq = !context.rcLast[name],
+                greenLight = now - context.rcLast[name] > throttle;
+            context.rcStats[name].count.attempted();
             if (firstReq || greenLight) {
                 this.close();
-                opts.context.rcStats[name].count.made();
+                context.rcStats[name].count.made();
                 return true;
             }
             return false;
         },
         close: function () {
-            opts.context.rcLast[name] = global.Date.now();
+            context.rcLast[name] = global.Date.now();
         },
         open: function () {
-            opts.context.rcLast[name] = 0;
+            context.rcLast[name] = 0;
         },
-        stats: opts.context.rcStats[name]
+        stats: context.rcStats[name]
     };
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./stat-set.js":9}],8:[function(require,module,exports){
+},{"./stat-set.js":10}],9:[function(require,module,exports){
 (function (global){
 var $ = require('curb');
 
@@ -230,7 +269,7 @@ module.exports = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"curb":1}],9:[function(require,module,exports){
+},{"curb":1}],10:[function(require,module,exports){
 (function (global){
 var $ = require('curb'),
     StatNode = require('./stat-node.js'),
@@ -281,5 +320,5 @@ module.exports = function (name, id) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":6,"./stat-node.js":8,"curb":1}]},{},[4])(4)
+},{"./log.js":6,"./stat-node.js":9,"curb":1}]},{},[4])(4)
 });
