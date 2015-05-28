@@ -2,14 +2,13 @@ var StatSet = require('./stat-set.js');
 
 /**
  * @param {String} name Unique identifier for this gate.
- * @param {Number} [opts.throttle] Defaults to 1000 milliseconds.
- * @param {String} opts.id Element id of parent frame.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Window} [opts.context]
  * @return {Object}
  */
 module.exports = function (name, opts) {
-    var throttle = opts.throttle || 1000,
-        context = opts.context || global.self;
+    var context = opts.context || global.self;
 
     context.rcStats = context.rcStats || {};
     context.rcStats[name] = context.rcStats[name] || StatSet(name, opts.id);
@@ -23,11 +22,13 @@ module.exports = function (name, opts) {
         check: function () {
             var now = global.Date.now(),
                 firstReq = !context.rcLast[name],
-                greenLight = now - context.rcLast[name] > throttle;
-            context.rcStats[name].count.attempted();
-            if (firstReq || greenLight) {
+                greenLight = now - context.rcLast[name] > opts.throttle,
+                free = this.stats.net.made < opts.grace;
+            this.stats.count.attempted();
+
+            if (free || firstReq || greenLight) {
                 this.close();
-                context.rcStats[name].count.made();
+                this.stats.count.made();
                 return true;
             }
             return false;

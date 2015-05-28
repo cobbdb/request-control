@@ -5,7 +5,8 @@ var Stats = require('./stat-set.js'),
     mark = require('./marker.js');
 
 /**
- * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
  * @return {Function} Imposter appendChild function.

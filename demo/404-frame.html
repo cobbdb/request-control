@@ -9,15 +9,20 @@
         top.throttle404 = 5;
         function setit() {
             setTimeout(function () {
-                dorequest('bad.url', '<404frame>');
-                new Image().src = 'bad.image';
+                dorequest('http://dcobb.net/bad.url?' + Math.random(), '<404frame>');
+                new Image().src = 'http://dcobb.net/bad.image.png?' + Math.random();
+                // Create object element.
                 var el = document.createElement('object');
-                el.setAttribute('data', 'missing.swf');
+                el.setAttribute('data', 'http://dcobb.net/missing.swf?' + Math.random());
+                document.body.appendChild(el);
+                // Sneaky create object element.
+                var el = document.createElement('div');
+                el.innerHTML = '<obj' + 'ect data=' + '"https://dcobb.net/missing2.swf?' + Math.random() + '"></obje' + 'ct>';
                 document.body.appendChild(el);
                 setit();
             }, 1000 / top.throttle404);
         }
-        //setit();
+        setit();
     </script>
 </body>
 </html>

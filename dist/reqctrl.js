@@ -17,7 +17,8 @@ var Stats = require('./stat-set.js'),
 
 /**
  * # Ajax Spy
- * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
  * @return {Function} Imposter XMLHttpRequest constructor.
@@ -53,7 +54,8 @@ var Stats = require('./stat-set.js'),
     mark = require('./marker.js');
 
 /**
- * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
  * @return {Function} Imposter appendChild function.
@@ -99,25 +101,39 @@ var ajaxSpy = require('./ajax-spy.js'),
     log = require('./log.js'),
     hash;
 
+
+global.top.rcDebug = true;
+
+
 /**
  * ## RequestControl([opts])
  * Starts the system.
- * @param {Number} [opts.throttle]
+ * @param {Number} [opts.grace] Defaults to 50. Number of requests to ignore
+ * before activating the request throttle.
+ * @param {Number} [opts.throttle] Defaults to 800. Minimum time in
+ * milliseconds between successive requests. Only applies after grace period.
  * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
     opts = opts || {};
-    function invade(context, id) {
-        var i, frame, len;
-        context = context || global.self;
+    opts.grace = opts.grace || 50;
+    opts.throttle = opts.throttle || 800;
 
-        opts.context = context;
-        opts.id = id || 'top';
+    function invade(context, id) {
+        var i, frame, len, spyConf;
+
+        context = context || global.self;
+        spyConf = {
+            context: context,
+            id: id || 'top',
+            grace: opts.grace,
+            throttle: opts.throttle
+        };
 
         // Place spies.
-        context.XMLHttpRequest = ajaxSpy(opts);
-        context.Image = imgSpy(opts);
-        context.Element.prototype.appendChild = appendSpy(opts);
+        context.XMLHttpRequest = ajaxSpy(spyConf);
+        context.Image = imgSpy(spyConf);
+        context.Element.prototype.appendChild = appendSpy(spyConf);
 
         // Invade any iframes as well.
         len = context.frames.length;
@@ -134,15 +150,18 @@ module.exports = function (opts) {
     // Run and reapply every 10sec to catch new frames.
     if (!hash) {
         invade();
-        hash = global.setInterval(invade, 10000);
+        hash = true;//global.setInterval(invade, 10000);
     }
 
     /**
-     * ## Stop()
+     * ## halt()
      * Stops RequestControl from invading new frames.
      */
     return function () {
+        // Stop the heartbeat.
         global.clearInterval(hash);
+
+        // ToDo: Kill existing spies.
     };
 };
 
@@ -154,7 +173,8 @@ var Stats = require('./stat-set.js'),
     mark = require('./marker.js');
 
 /**
- * @param {Number} opts.throttle Minimum time in milliseconds between successive requests.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Object} opts.context Window context.
  * @param {String} opts.id ID of the frameElement.
  * @return {Function} Imposter Image constructor.
@@ -174,15 +194,13 @@ module.exports = function (opts) {
             return new oldimage(width, height);
         } else {
             mark(opts.id);
+            return {};
         }
-        return {};
     };
 };
 
 },{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],6:[function(require,module,exports){
 (function (global){
-global.top.rcDebug = true;
-
 module.exports = function () {
     if (global.top.rcDebug) {
         global.console.debug.apply(global.console, arguments);
@@ -192,14 +210,20 @@ module.exports = function () {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],7:[function(require,module,exports){
 (function (global){
+var cache = {};
+
 /**
  * # Marker
  * Outlines any element with a red border.
  * @param {String} id Element ID.
  */
 module.exports = function (id) {
-    var el = global.top.document.getElementById(id);
-    el.style.border = '4px solid red';
+    var el;
+    if (!(id in cache)) {
+        el = global.top.document.getElementById(id);
+        el.style.border = '4px solid red';
+    }
+    cache[id] = true;
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
@@ -209,14 +233,13 @@ var StatSet = require('./stat-set.js');
 
 /**
  * @param {String} name Unique identifier for this gate.
- * @param {Number} [opts.throttle] Defaults to 1000 milliseconds.
- * @param {String} opts.id Element id of parent frame.
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
  * @param {Window} [opts.context]
  * @return {Object}
  */
 module.exports = function (name, opts) {
-    var throttle = opts.throttle || 1000,
-        context = opts.context || global.self;
+    var context = opts.context || global.self;
 
     context.rcStats = context.rcStats || {};
     context.rcStats[name] = context.rcStats[name] || StatSet(name, opts.id);
@@ -230,11 +253,13 @@ module.exports = function (name, opts) {
         check: function () {
             var now = global.Date.now(),
                 firstReq = !context.rcLast[name],
-                greenLight = now - context.rcLast[name] > throttle;
-            context.rcStats[name].count.attempted();
-            if (firstReq || greenLight) {
+                greenLight = now - context.rcLast[name] > opts.throttle,
+                free = this.stats.net.made < opts.grace;
+            this.stats.count.attempted();
+
+            if (free || firstReq || greenLight) {
                 this.close();
-                context.rcStats[name].count.made();
+                this.stats.count.made();
                 return true;
             }
             return false;
