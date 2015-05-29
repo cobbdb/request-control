@@ -30,7 +30,7 @@ module.exports = function (opts) {
     /**
      * @return {XMLHttpRequest}
      */
-    return function (args) {
+    function spy(args) {
         var req = new oldajax(args),
             oldsend = req.send;
         req.send = function () {
@@ -42,7 +42,16 @@ module.exports = function (opts) {
             }
         };
         return req;
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldajax.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldajax;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };
 
 },{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],3:[function(require,module,exports){
@@ -68,7 +77,7 @@ module.exports = function (opts) {
      * @param {Element} child
      * @return {Element} The appended child.
      */
-    return function (child) {
+    function spy(child) {
         var asText;
         harness.innerHTML = '';
         oldappend.call(harness, child);
@@ -84,7 +93,16 @@ module.exports = function (opts) {
         } else {
             return oldappend.call(this, child);
         }
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldappend.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldappend;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
@@ -150,7 +168,7 @@ module.exports = function (opts) {
     // Run and reapply every 10sec to catch new frames.
     if (!hash) {
         invade();
-        hash = true;//global.setInterval(invade, 10000);
+        hash = global.setInterval(invade, 10000);
     }
 
     /**
@@ -188,7 +206,7 @@ module.exports = function (opts) {
      * @param {Number} [height]
      * @return {Object} Valid Image instance or empty generic.
      */
-    return function (width, height) {
+    function spy(width, height) {
         if (gate.check()) {
             log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
@@ -196,7 +214,16 @@ module.exports = function (opts) {
             mark(opts.id);
             return {};
         }
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldimage.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldimage;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };
 
 },{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],6:[function(require,module,exports){

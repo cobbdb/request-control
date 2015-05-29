@@ -19,7 +19,7 @@ module.exports = function (opts) {
      * @param {Element} child
      * @return {Element} The appended child.
      */
-    return function (child) {
+    function spy(child) {
         var asText;
         harness.innerHTML = '';
         oldappend.call(harness, child);
@@ -35,5 +35,14 @@ module.exports = function (opts) {
         } else {
             return oldappend.call(this, child);
         }
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldappend.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldappend;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };

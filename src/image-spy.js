@@ -19,7 +19,7 @@ module.exports = function (opts) {
      * @param {Number} [height]
      * @return {Object} Valid Image instance or empty generic.
      */
-    return function (width, height) {
+    function spy(width, height) {
         if (gate.check()) {
             log('>>> <Image> request allowed', opts.id);
             return new oldimage(width, height);
@@ -27,5 +27,14 @@ module.exports = function (opts) {
             mark(opts.id);
             return {};
         }
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldimage.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldimage;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };

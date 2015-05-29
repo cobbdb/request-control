@@ -18,7 +18,7 @@ module.exports = function (opts) {
     /**
      * @return {XMLHttpRequest}
      */
-    return function (args) {
+    function spy(args) {
         var req = new oldajax(args),
             oldsend = req.send;
         req.send = function () {
@@ -30,5 +30,14 @@ module.exports = function (opts) {
             }
         };
         return req;
-    };
+    }
+    spy.rcSpy = true;
+
+    if (oldajax.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldajax;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
 };

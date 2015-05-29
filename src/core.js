@@ -58,7 +58,7 @@ module.exports = function (opts) {
     // Run and reapply every 10sec to catch new frames.
     if (!hash) {
         invade();
-        hash = true;//global.setInterval(invade, 10000);
+        hash = global.setInterval(invade, 10000);
     }
 
     /**
