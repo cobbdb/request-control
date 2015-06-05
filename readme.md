@@ -71,7 +71,7 @@ and set the `rcDebug` variable in the **top window**.
 > rcDebug = true;
 
 // Enable basic logging as well as X-Origin logs.
-> rc Debug = 2;
+> rcDebug = 2;
 ```
 
 ### Stopping the Throttle
