@@ -1,6 +1,6 @@
 {
   "name": "request-control-js",
-  "version": "0.0.5",
+  "version": "1.0.0",
   "description": "Fight back against the rising tide of http requests.",
   "main": "src/core.js",
   "scripts": {

@@ -62,6 +62,18 @@ RequestControl({
 });
 ```
 
+### Debugging your Site
+Request Control features logging and DOM element highlighting to help you find those
+problem areas on your site. Just open the JavaScript console in your browser
+and set the `rcDebug` variable in the **top window**.
+```javascript
+// Enable basic highlighting and request status reports.
+> rcDebug = true;
+
+// Enable basic logging as well as X-Origin logs.
+> rc Debug = 2;
+```
+
 ### Stopping the Throttle
 After the throttle has been started, you can turn it off with the callable that is
 returned when you first started the system.

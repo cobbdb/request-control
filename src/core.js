@@ -9,10 +9,6 @@ var ajaxSpy = require('./ajax-spy.js'),
     log = require('./log.js'),
     hash;
 
-
-global.top.rcDebug = true;
-
-
 /**
  * ## RequestControl([opts])
  * Starts the system.
@@ -47,10 +43,12 @@ module.exports = function (opts) {
         len = context.frames.length;
         for (i = 0; i < len; i += 1) {
             try {
-                frame = context.frames[i].frameElement;
-                invade(frame.contentWindow, frame.id);
+                frame = context.frames[i];
+                invade(frame, frame.frameElement.id);
             } catch (err) {
-                log('Denied access to', frame, err);
+                if (global.top.rcDebug === 2) {
+                    log('Denied access to', frame, err);
+                }
             }
         }
     }
@@ -69,6 +67,6 @@ module.exports = function (opts) {
         // Stop the heartbeat.
         global.clearInterval(hash);
 
-        // ToDo: Kill existing spies.
+        // >>> ToDo: Kill existing spies.
     };
 };
