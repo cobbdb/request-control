@@ -130,7 +130,7 @@ var ajaxSpy = require('./ajax-spy.js'),
  */
 module.exports = function (opts) {
     opts = opts || {};
-    opts.grace = opts.grace || 50;
+    opts.grace = opts.grace || 500;
     opts.throttle = opts.throttle || 800;
 
     function invade(context, id) {
