@@ -147,7 +147,7 @@ module.exports = function (opts) {
         };
 
         // Place spies.
-        if (!id && opts.top) {
+        if (id || (!id && opts.top)) {
             context.XMLHttpRequest = ajaxSpy(spyConf);
             context.Image = imgSpy(spyConf);
             context.Element.prototype.appendChild = appendSpy(spyConf);
