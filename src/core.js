@@ -16,6 +16,8 @@ var ajaxSpy = require('./ajax-spy.js'),
  * before activating the request throttle.
  * @param {Number} [opts.throttle] Defaults to 800. Minimum time in
  * milliseconds between successive requests. Only applies after grace period.
+ * @param {Boolean} [opts.top] True to throttle the top window as well
+ * as iframes.
  * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
@@ -35,9 +37,11 @@ module.exports = function (opts) {
         };
 
         // Place spies.
-        context.XMLHttpRequest = ajaxSpy(spyConf);
-        context.Image = imgSpy(spyConf);
-        context.Element.prototype.appendChild = appendSpy(spyConf);
+        if (!id && opts.top) {
+            context.XMLHttpRequest = ajaxSpy(spyConf);
+            context.Image = imgSpy(spyConf);
+            context.Element.prototype.appendChild = appendSpy(spyConf);
+        }
 
         // Invade any iframes as well.
         len = context.frames.length;
