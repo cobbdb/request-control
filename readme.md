@@ -19,7 +19,7 @@ Request Control provides you a throttle to take back control of your site perfor
 and enforce a speed limit on http requests per second.
 
 ***Will this interfere with other site content?***
-Definitely not. There is a (configurable) grace period of 100 requests before the throttle will kick in, meaning your standard site content will be unaffected.
+Definitely not. Throttling does not engage for the top window context by default - this means only your site's iframes will be affected. There is also a (configurable) grace period of 100 requests before the throttle will kick in, meaning your standard site content will be unaffected.
 
 ***Won't this interfere with revenue from video remnants?***
 Nope! Since this is only a throttle, video metrics will still be reported from video ads - just at a more sane rate. Once the throttle kicks in, only 1 out of every N (configurable) requests per second will be made.
@@ -59,6 +59,14 @@ RequestControl({
 ```javascript
 RequestControl({
     grace: 50
+});
+```
+
+##### top
+**{Boolean}** True to throttle the top window as well as iframes.
+```javascript
+RequestControl({
+    top: true
 });
 ```
 
