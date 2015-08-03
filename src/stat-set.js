@@ -34,12 +34,12 @@ module.exports = function (name, id) {
     global.setInterval(function () {
         if (global.top.rcDebug) {
             if (block.net.attempted > 0) {
-                log(
-                    '\tnet requests',
-                    id,
-                    name,
-                    block.net.toString()
-                );
+                log('summary', {
+                    msg: 'Net requests',
+                    id: id,
+                    name: name,
+                    net: block.net.toString()
+                });
             }
         }
     }, 9000);

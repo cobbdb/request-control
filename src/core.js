@@ -18,6 +18,7 @@ var ajaxSpy = require('./ajax-spy.js'),
  * milliseconds between successive requests. Only applies after grace period.
  * @param {Boolean} [opts.top] True to throttle the top window as well
  * as iframes.
+ * @param {Boolean} [opts.log] True to enable system logging.
  * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
@@ -27,8 +28,12 @@ module.exports = function (opts) {
 
     function invade(context, id) {
         var i, frame, len, spyConf;
-
         context = context || global.self;
+
+        if (opts.log || global.top.rcDebug) {
+            log.enable();
+        }
+
         spyConf = {
             context: context,
             id: id || 'top',
@@ -51,7 +56,11 @@ module.exports = function (opts) {
                 invade(frame, frame.frameElement.id);
             } catch (err) {
                 if (global.top.rcDebug === 2) {
-                    log('Denied access to', frame, err);
+                    log('summary', {
+                        msg: 'Denied access to iFrame',
+                        frame: frame,
+                        error: err
+                    });
                 }
             }
         }
@@ -70,7 +79,10 @@ module.exports = function (opts) {
     return function () {
         // Stop the heartbeat.
         global.clearInterval(hash);
-
-        // >>> ToDo: Kill existing spies.
     };
 };
+
+/**
+ * Expose the system logger.
+ */
+module.exports.log = log;

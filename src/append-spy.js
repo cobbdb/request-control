@@ -24,15 +24,23 @@ module.exports = function (opts) {
         harness.innerHTML = '';
         oldappend.call(harness, child);
         asText = harness.innerHTML;
-        if (asText.indexOf('http') >= 0) {
+        if (asText.indexOf('//') >= 0) {
             if (gate.check()) {
-                log('>>> <DomAppend> request allowed', opts.id);
+                log('update', {
+                    msg: '<DomAppend> request allowed',
+                    id: opts.id,
+                    text: asText
+                });
                 return oldappend.call(this, child);
             } else {
                 mark(opts.id);
                 return child;
             }
         } else {
+            log('update', {
+                msg: '<DomAppend> append allowed',
+                id: opts.id
+            });
             return oldappend.call(this, child);
         }
     }

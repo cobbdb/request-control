@@ -21,7 +21,10 @@ module.exports = function (opts) {
      */
     function spy(width, height) {
         if (gate.check()) {
-            log('>>> <Image> request allowed', opts.id);
+            log('update', {
+                msg: '<Image> request allowed',
+                id: opts.id
+            });
             return new oldimage(width, height);
         } else {
             mark(opts.id);

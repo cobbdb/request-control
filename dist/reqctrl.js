@@ -10,6 +10,202 @@ module.exports = function () {
 };
 
 },{}],2:[function(require,module,exports){
+(function (global){
+/**
+ * # Lumberjack
+ * Set `localStorage.lumberjack` to `on` to enable logging.
+ * @param {Boolean} enabled True to force logging regardless of
+ * the localStorage setting.
+ * @return {Object} A new Lumberjack.
+ * @see GitHub-Page http://github.com/cobbdb/lumberjack
+ */
+module.exports = function (enabled) {
+    var log,
+        record = {},
+        cbQueue = {},
+        master = [],
+        ls = global.localStorage || {};
+
+    /**
+     * ## log(channel, data)
+     * Record a log entry for an channel.
+     * @param {String} channel A string describing this channel.
+     * @param {String|Object|Number|Boolean} data Some data to log.
+     */
+    log = function (channel, data) {
+        var i, len, channel, entry;
+        var channelValid = typeof channel === 'string';
+        var dataType = typeof data;
+        var dataValid = dataType !== 'undefined' && dataType !== 'function';
+        if (ls.lumberjack !== 'on' && !enabled) {
+            // Do nothing unless enabled.
+            return;
+        }
+        if (channelValid && dataValid) {
+            /**
+             * All log entries take the form of:
+             * ```javascript
+             *  {
+             *      time: // timestamp when entry was logged
+             *      data: // the logged data
+             *      channel: // channel of entry
+             *      id: // id of entry in master record
+             *  }
+             * ```
+             */
+            entry = {
+                time: new Date(),
+                data: data,
+                channel: channel,
+                id: master.length
+            };
+            // Record the channel.
+            record[channel] = record[channel] || []
+            record[channel].push(entry);
+            master.push(entry);
+
+            // Perform any attached callbacks.
+            cbQueue[channel] = cbQueue[channel] || [];
+            len = cbQueue[channel].length;
+            for (i = 0; i < len; i += 1) {
+                cbQueue[channel][i](data);
+            }
+        } else {
+            throw Error('Lumberjack Error: log(channel, data) requires an channel {String} and a payload {String|Object|Number|Boolean}.');
+        }
+    };
+
+    /**
+     * ## log.clear([channel])
+     * Clear all data from a the log.
+     * @param {String} [channel] Name of a channel.
+     */
+    log.clear = function (channel) {
+        if (channel) {
+            record[channel] = [];
+        } else {
+            record = {};
+            master = [];
+        }
+    };
+
+    /**
+     * ## log.readback(channel, [pretty])
+     * Fetch the log of an channel.
+     * @param {String} channel A string describing this channel.
+     * @param {Boolean} [pretty] True to create a formatted string result.
+     * @return {Array|String} This channel's current record.
+     */
+    log.readback = function (channel, pretty) {
+        var channelValid = typeof channel === 'string';
+        if (channelValid) {
+            if (pretty) {
+                return JSON.stringify(record[channel], null, 4);
+            }
+            return record[channel] || [];
+        }
+        throw Error('log.readback(channel, pretty) requires an channel {String}.');
+    };
+
+    /**
+     * ## log.readback.master([pretty])
+     * Get a full readback of all channels' entries.
+     * @param {Boolean} [pretty] True to create a formatted string result.
+     * @return {Array|String} This log's master record.
+     */
+    log.readback.master = function (pretty) {
+        if (pretty) {
+            return JSON.stringify(master, null, 4);
+        }
+        return master;
+    };
+
+    /**
+     * ## log.readback.channels([pretty])
+     * Fetch list of log channels currently in use.
+     * @param {Boolean} [pretty] True to create a formatted string result.
+     * @return {Array|String} This log's set of used channels.
+     */
+    log.readback.channels = function (pretty) {
+        var keys = Object.keys(record);
+        if (pretty) {
+            return JSON.stringify(keys);
+        }
+        return keys;
+    };
+
+    /**
+     * ## log.flush([channel])
+     * Flush all logs from a single channel or from the entire
+     * system if no channel name is provided.
+     * @param {String} [channel] Optional name of channel to flush.
+     * @return {Array}
+     */
+    log.flush = function (channel) {
+        var logs;
+        if (channel) {
+            logs = record[channel];
+            record[channel] = [];
+        } else {
+            record = {};
+            master = [];
+            logs = [];
+        }
+        return logs;
+    };
+
+    /**
+     * ## log.on(channel, cb)
+     * Attach a callback to run anytime a channel is logged to.
+     * @param {String} channel A string describing this channel.
+     * @param {Function} cb The callback.
+     */
+    log.on = function (channel, cb) {
+        var channelValid = typeof channel === 'string';
+        var cbValid = typeof cb === 'function';
+        if (channelValid && cbValid) {
+            cbQueue[channel] = cbQueue[channel] || [];
+            cbQueue[channel].push(cb);
+        } else {
+            throw Error('log.on(channel, cb) requires an channel {String} and a callback {Function}.');
+        }
+    };
+
+    /**
+     * ## log.off(channel)
+     * Disable side-effects for a given channel.
+     * @param {String} channel A string describing this channel.
+     */
+    log.off = function (channel) {
+        var channelValid = typeof channel === 'string';
+        if (channelValid) {
+            cbQueue[channel] = [];
+        } else {
+            throw Error('log.off(channel) requires an channel {String}.');
+        }
+    };
+
+    /**
+     * ## log.enable()
+     * Activate logging regardless of previous settings.
+     */
+    log.enable = function () {
+        enabled = true;
+    };
+
+    /**
+     * ## log.disable()
+     * Force logging off.
+     */
+    log.disable = function () {
+        enabled = false;
+    };
+
+    return log;
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],3:[function(require,module,exports){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
@@ -35,7 +231,10 @@ module.exports = function (opts) {
             oldsend = req.send;
         req.send = function () {
             if (gate.check()) {
-                log('>>> <Ajax> request allowed', opts.id);
+                log('update', {
+                    msg: '<Ajax> request allowed',
+                    id: opts.id
+                });
                 oldsend.apply(req, arguments);
             } else {
                 mark(opts.id);
@@ -54,7 +253,7 @@ module.exports = function (opts) {
     }
 };
 
-},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],3:[function(require,module,exports){
+},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],4:[function(require,module,exports){
 (function (global){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
@@ -82,15 +281,23 @@ module.exports = function (opts) {
         harness.innerHTML = '';
         oldappend.call(harness, child);
         asText = harness.innerHTML;
-        if (asText.indexOf('http') >= 0) {
+        if (asText.indexOf('//') >= 0) {
             if (gate.check()) {
-                log('>>> <DomAppend> request allowed', opts.id);
+                log('update', {
+                    msg: '<DomAppend> request allowed',
+                    id: opts.id,
+                    text: asText
+                });
                 return oldappend.call(this, child);
             } else {
                 mark(opts.id);
                 return child;
             }
         } else {
+            log('update', {
+                msg: '<DomAppend> append allowed',
+                id: opts.id
+            });
             return oldappend.call(this, child);
         }
     }
@@ -106,7 +313,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],4:[function(require,module,exports){
+},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],5:[function(require,module,exports){
 (function (global){
 /**
  * # Request Control
@@ -128,6 +335,7 @@ var ajaxSpy = require('./ajax-spy.js'),
  * milliseconds between successive requests. Only applies after grace period.
  * @param {Boolean} [opts.top] True to throttle the top window as well
  * as iframes.
+ * @param {Boolean} [opts.log] True to enable system logging.
  * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
@@ -137,8 +345,12 @@ module.exports = function (opts) {
 
     function invade(context, id) {
         var i, frame, len, spyConf;
-
         context = context || global.self;
+
+        if (opts.log || global.top.rcDebug) {
+            log.enable();
+        }
+
         spyConf = {
             context: context,
             id: id || 'top',
@@ -161,7 +373,11 @@ module.exports = function (opts) {
                 invade(frame, frame.frameElement.id);
             } catch (err) {
                 if (global.top.rcDebug === 2) {
-                    log('Denied access to', frame, err);
+                    log('summary', {
+                        msg: 'Denied access to iFrame',
+                        frame: frame,
+                        error: err
+                    });
                 }
             }
         }
@@ -180,13 +396,16 @@ module.exports = function (opts) {
     return function () {
         // Stop the heartbeat.
         global.clearInterval(hash);
-
-        // >>> ToDo: Kill existing spies.
     };
 };
 
+/**
+ * Expose the system logger.
+ */
+module.exports.log = log;
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ajax-spy.js":2,"./append-spy.js":3,"./image-spy.js":5,"./log.js":6}],5:[function(require,module,exports){
+},{"./ajax-spy.js":3,"./append-spy.js":4,"./image-spy.js":6,"./log.js":7}],6:[function(require,module,exports){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
@@ -210,7 +429,10 @@ module.exports = function (opts) {
      */
     function spy(width, height) {
         if (gate.check()) {
-            log('>>> <Image> request allowed', opts.id);
+            log('update', {
+                msg: '<Image> request allowed',
+                id: opts.id
+            });
             return new oldimage(width, height);
         } else {
             mark(opts.id);
@@ -228,16 +450,22 @@ module.exports = function (opts) {
     }
 };
 
-},{"./log.js":6,"./marker.js":7,"./request-gate.js":8,"./stat-set.js":10}],6:[function(require,module,exports){
+},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],7:[function(require,module,exports){
 (function (global){
-module.exports = function () {
-    if (global.top.rcDebug) {
-        global.console.debug.apply(global.console, arguments);
+var Lumberjack = require('lumberjackjs');
+module.exports = Lumberjack();
+
+module.exports.on('summary', function (data) {
+    global.console.log(data);
+});
+module.exports.on('update', function (data) {
+    if (global.top.rcDebug === 2) {
+        global.console.log(data);
     }
-};
+});
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(require,module,exports){
+},{"lumberjackjs":2}],8:[function(require,module,exports){
 (function (global){
 var cache = {};
 
@@ -260,7 +488,7 @@ module.exports = function (id) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function (global){
 var StatSet = require('./stat-set.js');
 
@@ -308,7 +536,7 @@ module.exports = function (name, opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./stat-set.js":10}],9:[function(require,module,exports){
+},{"./stat-set.js":11}],10:[function(require,module,exports){
 (function (global){
 var $ = require('curb');
 
@@ -327,7 +555,7 @@ module.exports = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"curb":1}],10:[function(require,module,exports){
+},{"curb":1}],11:[function(require,module,exports){
 (function (global){
 var $ = require('curb'),
     StatNode = require('./stat-node.js'),
@@ -365,12 +593,12 @@ module.exports = function (name, id) {
     global.setInterval(function () {
         if (global.top.rcDebug) {
             if (block.net.attempted > 0) {
-                log(
-                    '\tnet requests',
-                    id,
-                    name,
-                    block.net.toString()
-                );
+                log('summary', {
+                    msg: 'Net requests',
+                    id: id,
+                    name: name,
+                    net: block.net.toString()
+                });
             }
         }
     }, 9000);
@@ -378,5 +606,5 @@ module.exports = function (name, id) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":6,"./stat-node.js":9,"curb":1}]},{},[4])(4)
+},{"./log.js":7,"./stat-node.js":10,"curb":1}]},{},[5])(5)
 });
