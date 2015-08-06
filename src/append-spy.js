@@ -26,8 +26,8 @@ module.exports = function (opts) {
         asText = harness.innerHTML;
         if (asText.indexOf('//') >= 0) {
             if (gate.check()) {
-                log('update', {
-                    msg: '<DomAppend> request allowed',
+                log('append', {
+                    msg: 'request allowed',
                     id: opts.id,
                     text: asText
                 });
@@ -37,8 +37,8 @@ module.exports = function (opts) {
                 return child;
             }
         } else {
-            log('update', {
-                msg: '<DomAppend> append allowed',
+            log('append', {
+                msg: 'non-request append allowed',
                 id: opts.id
             });
             return oldappend.call(this, child);

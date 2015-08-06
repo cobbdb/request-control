@@ -231,8 +231,8 @@ module.exports = function (opts) {
             oldsend = req.send;
         req.send = function () {
             if (gate.check()) {
-                log('update', {
-                    msg: '<Ajax> request allowed',
+                log('ajax', {
+                    msg: 'request allowed',
                     id: opts.id
                 });
                 oldsend.apply(req, arguments);
@@ -283,8 +283,8 @@ module.exports = function (opts) {
         asText = harness.innerHTML;
         if (asText.indexOf('//') >= 0) {
             if (gate.check()) {
-                log('update', {
-                    msg: '<DomAppend> request allowed',
+                log('append', {
+                    msg: 'request allowed',
                     id: opts.id,
                     text: asText
                 });
@@ -294,8 +294,8 @@ module.exports = function (opts) {
                 return child;
             }
         } else {
-            log('update', {
-                msg: '<DomAppend> append allowed',
+            log('append', {
+                msg: 'non-request append allowed',
                 id: opts.id
             });
             return oldappend.call(this, child);
@@ -428,12 +428,25 @@ module.exports = function (opts) {
      * @return {Object} Valid Image instance or empty generic.
      */
     function spy(width, height) {
+        var imgSrc;
         if (gate.check()) {
-            log('update', {
-                msg: '<Image> request allowed',
+            log('image', {
+                msg: 'instance created',
                 id: opts.id
             });
-            return new oldimage(width, height);
+            return {
+                get src () {
+                    return imgSrc;
+                },
+                set src (url) {
+                    log('image', {
+                        msg: 'request allowed',
+                        src: url
+                    });
+                    imgSrc = url;
+                    new oldimage(width, height).src = url;
+                }
+            };
         } else {
             mark(opts.id);
             return {};
@@ -458,9 +471,19 @@ module.exports = Lumberjack();
 module.exports.on('summary', function (data) {
     global.console.log(data);
 });
-module.exports.on('update', function (data) {
+module.exports.on('image', function (data) {
     if (global.top.rcDebug === 2) {
-        global.console.log(data);
+        global.console.log('image', data);
+    }
+});
+module.exports.on('ajax', function (data) {
+    if (global.top.rcDebug === 2) {
+        global.console.log('ajax', data);
+    }
+});
+module.exports.on('append', function (data) {
+    if (global.top.rcDebug === 2) {
+        global.console.log('append', data);
     }
 });
 

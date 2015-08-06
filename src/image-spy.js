@@ -20,12 +20,25 @@ module.exports = function (opts) {
      * @return {Object} Valid Image instance or empty generic.
      */
     function spy(width, height) {
+        var imgSrc;
         if (gate.check()) {
-            log('update', {
-                msg: '<Image> request allowed',
+            log('image', {
+                msg: 'instance created',
                 id: opts.id
             });
-            return new oldimage(width, height);
+            return {
+                get src () {
+                    return imgSrc;
+                },
+                set src (url) {
+                    log('image', {
+                        msg: 'request allowed',
+                        src: url
+                    });
+                    imgSrc = url;
+                    new oldimage(width, height).src = url;
+                }
+            };
         } else {
             mark(opts.id);
             return {};

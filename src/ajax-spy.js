@@ -23,8 +23,8 @@ module.exports = function (opts) {
             oldsend = req.send;
         req.send = function () {
             if (gate.check()) {
-                log('update', {
-                    msg: '<Ajax> request allowed',
+                log('ajax', {
+                    msg: 'request allowed',
                     id: opts.id
                 });
                 oldsend.apply(req, arguments);

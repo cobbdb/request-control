@@ -9,10 +9,13 @@
         top.throttle200 = 0.5;
         function setit() {
             setTimeout(function () {
+                // ajax
                 dorequest(
                     'external.js?' + Math.random(),
                     '<200frame>'
                 );
+
+                // append
                 var el = document.createElement('div');
                 el.innerHTML = '....';
                 document.body.appendChild(el);
@@ -22,6 +25,10 @@
                 var el = document.createElement('div');
                 el.innerHTML = '<object data="http://dcobb.net/request-control/demo/external.swf?' + Math.random() + '"></object>';
                 document.body.appendChild(el);
+
+                // image
+                new Image().src = 'https://www.doubleclickbygoogle.com/static/core/img/doubleclick-logo-large.jpg?' + Math.random();
+
                 setit();
             }, 1000 / top.throttle200);
         }
