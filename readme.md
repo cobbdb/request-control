@@ -71,8 +71,9 @@ RequestControl({
 ```
 
 ##### log
-**{Boolean}** True to enable logging. Lumberjack logs with [Lumberjack](http://cobbdb.github.io/lumberjack/)
-to 4 channels: `summary`, `image`, `ajax`, `append`.
+**{Boolean}** True to enable logging. RequestControl logs with
+[Lumberjack](https://github.com/cobbdb/lumberjack) to 4
+channels: `summary`, `image`, `ajax`, `append`.
 ```javascript
 RequestControl({
     log: true
