@@ -70,16 +70,27 @@ RequestControl({
 });
 ```
 
+##### log
+**{Boolean}** True to enable logging. Lumberjack logs with [Lumberjack](http://cobbdb.github.io/lumberjack/)
+to 4 channels: `summary`, `image`, `ajax`, `append`.
+```javascript
+RequestControl({
+    log: true
+});
+```
+
 ### Debugging your Site
 Request Control features logging and DOM element highlighting to help you find those
 problem areas on your site. Just open the JavaScript console in your browser
 and set the `rcDebug` variable in the **top window**.
 ```javascript
-// Enable basic highlighting and request status reports.
+// Enable basic highlighting and request summary reports.
 > rcDebug = true;
 
-// Enable basic logging as well as X-Origin logs.
-> rcDebug = 2;
+// Print a detailed report of network activity.
+// Available reports are: image, ajax, append. You can request reports for
+// any of these. For example, to get only image and ajax reports:
+> RequestControl.log.report('image ajax');
 ```
 
 ### Stopping the Throttle
