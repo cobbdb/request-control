@@ -1,6 +1,6 @@
 {
   "name": "request-control-js",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "Fight back against the rising tide of http requests.",
   "main": "src/core.js",
   "scripts": {
@@ -29,15 +29,14 @@
   },
   "homepage": "https://github.com/cobbdb/request-control",
   "devDependencies": {
-    "grunt": "^0.4.5",
-    "grunt-browserify": "^3.8.0",
-    "grunt-contrib-jshint": "^0.11.2",
-    "grunt-contrib-uglify": "^0.9.1",
-    "lumberjackjs": "^1.2.0",
-    "matchdep": "^0.3.0"
+    "grunt": "0.4.5",
+    "grunt-browserify": "4.0.0",
+    "grunt-contrib-jshint": "0.11.2",
+    "grunt-contrib-uglify": "0.9.1",
+    "matchdep": "0.3.0"
   },
   "dependencies": {
-    "baseclassjs": "^2.3.0",
-    "curb": "^1.0.1"
+    "lumberjackjs": "1.2.0",
+    "curb": "1.0.1"
   }
 }
