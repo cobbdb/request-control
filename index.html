@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Request-control by cobbdb</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Request-control</h1>
+      <h2 class="project-tagline">Fight back against the rising tide of http requests.</h2>
+      <a href="https://github.com/cobbdb/request-control" class="btn">View on GitHub</a>
+      <a href="https://github.com/cobbdb/request-control/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/cobbdb/request-control/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><a href="https://github.com/cobbdb/request-control">
+    <img alt="logo" src="http://i.imgur.com/xrtq29k.png" width="300">
+</a></p>
+
+<p><a href="http://badge.fury.io/bo/request-control"><img src="https://badge.fury.io/bo/request-control.svg" alt="Bower version"></a> <a href="http://badge.fury.io/js/request-control-js"><img src="https://badge.fury.io/js/request-control-js.svg" alt="NPM version"></a></p>
+
+<p>Throttle aggressive 3rd party http requests.</p>
+
+<pre><code>$ bower install request-control
+$ npm install request-control-js
+</code></pre>
+
+<hr>
+
+<p>As viewability becomes the gold standard in advertising metrics, many vendors are
+hungry for related data. Unfortunately, some programatic and remnant creatives
+can end up plaguing your site with a relentless flow of http requests - especially
+from video ads.</p>
+
+<p>Request Control provides you a throttle to take back control of your site performance
+and enforce a speed limit on http requests per second.</p>
+
+<p><strong><em>Will this interfere with other site content?</em></strong>
+Definitely not. Throttling does not engage for the top window context by default - this means only your site's iframes will be affected. There is also a (configurable) grace period of 100 requests before the throttle will kick in, meaning your standard site content will be unaffected.</p>
+
+<p><strong><em>Won't this interfere with revenue from video remnants?</em></strong>
+Nope! Since this is only a throttle, video metrics will still be reported from video ads - just at a more sane rate. Once the throttle kicks in, only 1 out of every N (configurable) requests per second will be made.</p>
+
+<p>Request Control is intended to throttle malicious reporting - which may make upwards of 10 http requests per second! At roughly 100KB per request this can add up to some <em>very</em> expensive site visits for your mobile customers.</p>
+
+<h3>
+<a id="using-the-throttle" class="anchor" href="#using-the-throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>Using the Throttle</h3>
+
+<p>To load Request Control on your site, simply include the built script from <code>dist/reqctrl.min.js</code> and then start the throttle when you're ready to enforce a request speed limit. Request Control will automatically reapply the throttle when possible in any iframes for you.</p>
+
+<p>You can install the JS global object with <code>bower install request-control</code>.</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">script</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>path/to/reqctrl.min.js<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">script</span>&gt;
+<span class="pl-s1">&lt;<span class="pl-ent">script</span>&gt;</span>
+<span class="pl-s1">    RequestControl();</span>
+<span class="pl-s1">&lt;/<span class="pl-ent">script</span>&gt;</span></pre></div>
+
+<p>Request Control is also provided as a CommonJS module with <code>npm install request-control-js</code>.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-k">var</span> Throttle <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>request-control-js<span class="pl-pds">'</span></span>);
+Throttle();</pre></div>
+
+<h3>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h3>
+
+<p>To better tune the throttle for your site, there are a few options you can customize.</p>
+
+<h5>
+<a id="throttle" class="anchor" href="#throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>throttle</h5>
+
+<p><strong>{Number}</strong> This is the time in milliseconds to enfore between successive http requests.</p>
+
+<div class="highlight highlight-javascript"><pre>RequestControl({
+    throttle<span class="pl-k">:</span> <span class="pl-c1">4000</span>
+});</pre></div>
+
+<h5>
+<a id="grace" class="anchor" href="#grace" aria-hidden="true"><span class="octicon octicon-link"></span></a>grace</h5>
+
+<p><strong>{Number}</strong> Number of requests to allow before engaging the throttle.</p>
+
+<div class="highlight highlight-javascript"><pre>RequestControl({
+    grace<span class="pl-k">:</span> <span class="pl-c1">50</span>
+});</pre></div>
+
+<h5>
+<a id="top" class="anchor" href="#top" aria-hidden="true"><span class="octicon octicon-link"></span></a>top</h5>
+
+<p><strong>{Boolean}</strong> True to throttle the top window as well as iframes.</p>
+
+<div class="highlight highlight-javascript"><pre>RequestControl({
+    top<span class="pl-k">:</span> <span class="pl-c1">true</span>
+});</pre></div>
+
+<h5>
+<a id="log" class="anchor" href="#log" aria-hidden="true"><span class="octicon octicon-link"></span></a>log</h5>
+
+<p><strong>{Boolean}</strong> True to enable logging. Lumberjack logs with <a href="http://cobbdb.github.io/lumberjack/">Lumberjack</a>
+to 4 channels: <code>summary</code>, <code>image</code>, <code>ajax</code>, <code>append</code>.</p>
+
+<div class="highlight highlight-javascript"><pre>RequestControl({
+    log<span class="pl-k">:</span> <span class="pl-c1">true</span>
+});</pre></div>
+
+<h3>
+<a id="debugging-your-site" class="anchor" href="#debugging-your-site" aria-hidden="true"><span class="octicon octicon-link"></span></a>Debugging your Site</h3>
+
+<p>Request Control features logging and DOM element highlighting to help you find those
+problem areas on your site. Just open the JavaScript console in your browser
+and set the <code>rcDebug</code> variable in the <strong>top window</strong>.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c">// Enable basic highlighting and request summary reports.</span>
+<span class="pl-k">&gt;</span> rcDebug <span class="pl-k">=</span> <span class="pl-c1">true</span>;
+
+<span class="pl-c">// Print a detailed report of network activity.</span>
+<span class="pl-c">// Available reports are: image, ajax, append. You can request reports for</span>
+<span class="pl-c">// any of these. For example, to get only image and ajax reports:</span>
+<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>image ajax<span class="pl-pds">'</span></span>);</pre></div>
+
+<h3>
+<a id="stopping-the-throttle" class="anchor" href="#stopping-the-throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stopping the Throttle</h3>
+
+<p>After the throttle has been started, you can turn it off with the callable that is
+returned when you first started the system.</p>
+
+<div class="highlight highlight-javascript"><pre><span class="pl-c">// Start the throttle.</span>
+<span class="pl-k">var</span> halt <span class="pl-k">=</span> RequestControl();
+
+<span class="pl-c">// Some time later, stop the throttle.</span>
+halt();</pre></div>
+
+<hr>
+
+<ul>
+<li>See: <a href="http://cobbdb.github.io/request-control">http://cobbdb.github.io/request-control</a>
+</li>
+<li>See: <a href="http://github.com/cobbdb/request-control">http://github.com/cobbdb/request-control</a>
+</li>
+<li>License: MIT</li>
+</ul>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/cobbdb/request-control">Request-control</a> is maintained by <a href="https://github.com/cobbdb">cobbdb</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
