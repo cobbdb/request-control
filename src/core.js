@@ -6,6 +6,7 @@
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
+    createSpy = require('./create-spy.js'),
     log = require('./log.js'),
     hash;
 
@@ -45,6 +46,7 @@ module.exports = function (opts) {
         if (id || (!id && opts.top)) {
             context.XMLHttpRequest = ajaxSpy(spyConf);
             context.Image = imgSpy(spyConf);
+            context.document.createElement = createSpy(spyConf);
             context.Element.prototype.appendChild = appendSpy(spyConf);
         }
 
@@ -54,22 +56,14 @@ module.exports = function (opts) {
             try {
                 frame = context.frames[i];
                 invade(frame, frame.frameElement.id);
-            } catch (err) {
-                if (global.top.rcDebug === 2) {
-                    log('summary', {
-                        msg: 'Denied access to iFrame',
-                        frame: frame,
-                        error: err
-                    });
-                }
-            }
+            } catch (err) {}
         }
     }
 
     // Run and reapply every 10sec to catch new frames.
     if (!hash) {
         invade();
-        hash = global.setInterval(invade, 10000);
+        hash = global.setInterval(invade, 100);
     }
 
     /**

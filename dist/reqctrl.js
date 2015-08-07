@@ -253,7 +253,7 @@ module.exports = function (opts) {
     }
 };
 
-},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],4:[function(require,module,exports){
+},{"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],4:[function(require,module,exports){
 (function (global){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
@@ -313,7 +313,7 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],5:[function(require,module,exports){
+},{"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],5:[function(require,module,exports){
 (function (global){
 /**
  * # Request Control
@@ -323,6 +323,7 @@ module.exports = function (opts) {
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
+    createSpy = require('./create-spy.js'),
     log = require('./log.js'),
     hash;
 
@@ -362,6 +363,7 @@ module.exports = function (opts) {
         if (id || (!id && opts.top)) {
             context.XMLHttpRequest = ajaxSpy(spyConf);
             context.Image = imgSpy(spyConf);
+            context.document.createElement = createSpy(spyConf);
             context.Element.prototype.appendChild = appendSpy(spyConf);
         }
 
@@ -371,22 +373,14 @@ module.exports = function (opts) {
             try {
                 frame = context.frames[i];
                 invade(frame, frame.frameElement.id);
-            } catch (err) {
-                if (global.top.rcDebug === 2) {
-                    log('summary', {
-                        msg: 'Denied access to iFrame',
-                        frame: frame,
-                        error: err
-                    });
-                }
-            }
+            } catch (err) {}
         }
     }
 
     // Run and reapply every 10sec to catch new frames.
     if (!hash) {
         invade();
-        hash = global.setInterval(invade, 10000);
+        hash = global.setInterval(invade, 100);
     }
 
     /**
@@ -405,11 +399,56 @@ module.exports = function (opts) {
 module.exports.log = log;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ajax-spy.js":3,"./append-spy.js":4,"./image-spy.js":6,"./log.js":7}],6:[function(require,module,exports){
+},{"./ajax-spy.js":3,"./append-spy.js":4,"./create-spy.js":6,"./image-spy.js":7,"./log.js":9}],6:[function(require,module,exports){
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
-    mark = require('./marker.js');
+    mark = require('./marker.js'),
+    NewImage = require('./image.js');
+
+/**
+ * @param {Number} opts.throttle
+ * @param {Number} opts.grace
+ * @param {Object} opts.context Window context.
+ * @param {String} opts.id ID of the frameElement.
+ * @return {Function} Imposter createElement function.
+ */
+module.exports = function (opts) {
+    var oldcreate = opts.context.document.createElement,
+        gate = RequestGate('Image', opts);
+
+    /**
+     * @param {String} tagName
+     * @return {DOM Node}
+     */
+    function spy(tagName) {
+        if (tagName === 'img') {
+            if (gate.check()) {
+                return NewImage(opts.context);
+            } else {
+                mark(opts.id);
+                return oldcreate.call(opts.context.document, 'span');
+            }
+        }
+        return oldcreate.call(opts.context.document, tagName);
+    }
+    spy.rcSpy = true;
+
+    if (oldcreate.rcSpy) {
+        // Return self if already a RequestControl spy.
+        return oldcreate;
+    } else {
+        // Otherwise, return the new spy.
+        return spy;
+    }
+};
+
+},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],7:[function(require,module,exports){
+var Stats = require('./stat-set.js'),
+    log = require('./log.js'),
+    RequestGate = require('./request-gate.js'),
+    mark = require('./marker.js'),
+    NewImage = require('./image.js');
 
 /**
  * @param {Number} opts.throttle
@@ -425,28 +464,11 @@ module.exports = function (opts) {
     /**
      * @param {Number} [width]
      * @param {Number} [height]
-     * @return {Object} Valid Image instance or empty generic.
+     * @return {Object} Valid image Node or empty generic.
      */
     function spy(width, height) {
-        var imgSrc;
         if (gate.check()) {
-            log('image', {
-                msg: 'instance created',
-                id: opts.id
-            });
-            return {
-                get src () {
-                    return imgSrc;
-                },
-                set src (url) {
-                    log('image', {
-                        msg: 'request allowed',
-                        src: url
-                    });
-                    imgSrc = url;
-                    new oldimage(width, height).src = url;
-                }
-            };
+            return NewImage(opts.context);
         } else {
             mark(opts.id);
             return {};
@@ -463,32 +485,87 @@ module.exports = function (opts) {
     }
 };
 
-},{"./log.js":7,"./marker.js":8,"./request-gate.js":9,"./stat-set.js":11}],7:[function(require,module,exports){
+},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],8:[function(require,module,exports){
 (function (global){
-var Lumberjack = require('lumberjackjs');
-module.exports = Lumberjack();
+var log = require('./log.js'),
+    oldCreate = global.document.createElement;
 
-module.exports.on('summary', function (data) {
+function make(tagName, ctx) {
+    return oldCreate.call(ctx.document, tagName);
+}
+
+/**
+ * Create a new wrapped image Node.
+ * @param {Window} ctx
+ */
+module.exports = function (ctx) {
+    var husk = make('span', ctx),
+        img = make('img', ctx);
+    husk.appendChild(img);
+
+    global.Object.defineProperty(husk, 'src', {
+        get: function () {
+            return img.src;
+        },
+        set: function (url) {
+            log('image', {
+                msg: 'Fetching image',
+                src: url
+            });
+            img.src = url;
+        }
+    });
+
+    return husk;
+};
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./log.js":9}],9:[function(require,module,exports){
+(function (global){
+var Lumberjack = require('lumberjackjs'),
+    log = Lumberjack(),
+    hash;
+module.exports = log;
+
+/**
+ * Print detailed report.
+ * @param {String} types
+ */
+log.report = function (types) {
+    var showImage = types.indexOf('image') >= 0,
+        showAjax = types.indexOf('ajax') >= 0,
+        showAppend = types.indexOf('append') >= 0,
+        showAll = types.indexOf('all') >= 0;
+
+    if (showImage || showAll) {
+        global.console.log('\n~~~~~~~~~~~~~ IMAGE ~~~~~~~~~~~~');
+        global.console.log(
+            global.JSON.stringify(log.readback('image'), null, 2)
+        );
+        global.console.log('\n');
+    }
+    if (showAjax || showAll) {
+        global.console.log('\n~~~~~~~~~~~~~ AJAX ~~~~~~~~~~~~');
+        global.console.log(
+            global.JSON.stringify(log.readback('ajax'), null, 2)
+        );
+        global.console.log('\n');
+    }
+    if (showAppend || showAll) {
+        global.console.log('\n~~~~~~~~~~~~~ APPEND ~~~~~~~~~~~~');
+        global.console.log(
+            global.JSON.stringify(log.readback('append'), null, 2)
+        );
+        global.console.log('\n');
+    }
+};
+
+log.on('summary', function (data) {
     global.console.log(data);
-});
-module.exports.on('image', function (data) {
-    if (global.top.rcDebug === 2) {
-        global.console.log('image', data);
-    }
-});
-module.exports.on('ajax', function (data) {
-    if (global.top.rcDebug === 2) {
-        global.console.log('ajax', data);
-    }
-});
-module.exports.on('append', function (data) {
-    if (global.top.rcDebug === 2) {
-        global.console.log('append', data);
-    }
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"lumberjackjs":2}],8:[function(require,module,exports){
+},{"lumberjackjs":2}],10:[function(require,module,exports){
 (function (global){
 var cache = {};
 
@@ -511,7 +588,7 @@ module.exports = function (id) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 (function (global){
 var StatSet = require('./stat-set.js');
 
@@ -559,7 +636,7 @@ module.exports = function (name, opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./stat-set.js":11}],10:[function(require,module,exports){
+},{"./stat-set.js":13}],12:[function(require,module,exports){
 (function (global){
 var $ = require('curb');
 
@@ -578,7 +655,7 @@ module.exports = function () {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"curb":1}],11:[function(require,module,exports){
+},{"curb":1}],13:[function(require,module,exports){
 (function (global){
 var $ = require('curb'),
     StatNode = require('./stat-node.js'),
@@ -629,5 +706,5 @@ module.exports = function (name, id) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":7,"./stat-node.js":10,"curb":1}]},{},[5])(5)
+},{"./log.js":9,"./stat-node.js":12,"curb":1}]},{},[5])(5)
 });

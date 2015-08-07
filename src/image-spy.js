@@ -1,7 +1,8 @@
 var Stats = require('./stat-set.js'),
     log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
-    mark = require('./marker.js');
+    mark = require('./marker.js'),
+    NewImage = require('./image.js');
 
 /**
  * @param {Number} opts.throttle
@@ -17,28 +18,11 @@ module.exports = function (opts) {
     /**
      * @param {Number} [width]
      * @param {Number} [height]
-     * @return {Object} Valid Image instance or empty generic.
+     * @return {Object} Valid image Node or empty generic.
      */
     function spy(width, height) {
-        var imgSrc;
         if (gate.check()) {
-            log('image', {
-                msg: 'instance created',
-                id: opts.id
-            });
-            return {
-                get src () {
-                    return imgSrc;
-                },
-                set src (url) {
-                    log('image', {
-                        msg: 'request allowed',
-                        src: url
-                    });
-                    imgSrc = url;
-                    new oldimage(width, height).src = url;
-                }
-            };
+            return NewImage(opts.context);
         } else {
             mark(opts.id);
             return {};
