@@ -1,4 +1,5 @@
-var StatSet = require('./stat-set.js');
+var StatSet = require('./stat-set.js'),
+    disabled = false;
 
 /**
  * @param {String} name Unique identifier for this gate.
@@ -26,7 +27,7 @@ module.exports = function (name, opts) {
                 free = this.stats.net.made < opts.grace;
             this.stats.count.attempted();
 
-            if (free || firstReq || greenLight) {
+            if (disabled || free || firstReq || greenLight) {
                 this.close();
                 this.stats.count.made();
                 return true;
@@ -41,4 +42,11 @@ module.exports = function (name, opts) {
         },
         stats: context.rcStats[name]
     };
+};
+
+/**
+ * Call to disable all request throttling.
+ */
+module.exports.disable = function () {
+    disabled = true;
 };

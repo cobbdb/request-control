@@ -1,5 +1,4 @@
-var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+var log = require('./log.js'),
     harness = global.document.createElement('div'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js');

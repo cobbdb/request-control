@@ -1,9 +1,8 @@
-var $ = require('curb'),
-    StatNode = require('./stat-node.js'),
+var StatNode = require('./stat-node.js'),
     log = require('./log.js');
 
 /**
- * @param {String} name
+ * @param {String} name Type this set belongs to.
  * @param {String} id Element id of parent frame.
  * @return {Object}
  */
@@ -24,24 +23,17 @@ module.exports = function (name, id) {
         },
         rpsLastMade = 0,
         rpsLastAttempted = 0;
+
     global.setInterval(function () {
         // Update rps counter.
         block.rps.made = block.net.made - rpsLastMade;
         block.rps.attempted = block.net.attempted - rpsLastAttempted;
         rpsLastMade = block.net.made;
         rpsLastAttempted = block.net.attempted;
+
+        // Update log data.
+        log.update(id, name, block.net.toString());
     }, 1000);
-    global.setInterval(function () {
-        if (global.top.rcDebug) {
-            if (block.net.attempted > 0) {
-                log('summary', {
-                    msg: 'Net requests',
-                    id: id,
-                    name: name,
-                    net: block.net.toString()
-                });
-            }
-        }
-    }, 9000);
+
     return block;
 };

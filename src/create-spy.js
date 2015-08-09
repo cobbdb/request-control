@@ -1,5 +1,4 @@
-﻿var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+﻿var log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js'),
     NewImage = require('./image.js');
@@ -22,7 +21,7 @@ module.exports = function (opts) {
     function spy(tagName) {
         if (tagName === 'img') {
             if (gate.check()) {
-                return NewImage(opts.context);
+                return NewImage(opts.context, opts.id);
             } else {
                 mark(opts.id);
                 return oldcreate.call(opts.context.document, 'span');

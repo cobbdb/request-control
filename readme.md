@@ -73,7 +73,7 @@ RequestControl({
 ##### log
 **{Boolean}** True to enable logging. RequestControl logs with
 [Lumberjack](https://github.com/cobbdb/lumberjack) to 4
-channels: `summary`, `image`, `ajax`, `append`.
+channels: `image`, `ajax`, `append`.
 ```javascript
 RequestControl({
     log: true
@@ -90,8 +90,10 @@ and set the `rcDebug` variable in the **top window**.
 
 // Print a detailed report of network activity.
 // Available reports are: image, ajax, append. You can request reports for
-// any of these. For example, to get only image and ajax reports:
-> RequestControl.log.report('image ajax');
+// any of these.
+> RequestControl.log.report('image ajax'); // Report only image and ajax data.
+> RequestControl.log.report('append'); // Get append data only.
+> RequestControl.log.report(); // Get summary only.
 ```
 
 ### Stopping the Throttle

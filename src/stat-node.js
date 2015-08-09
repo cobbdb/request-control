@@ -8,7 +8,7 @@ module.exports = function () {
             return $('(made/attempted) %s/%s %s%',
                 this.made,
                 this.attempted,
-                (!this.attempted) ? 0 : global.Math.round(this.made / this.attempted * 100)
+                this.attempted ? global.Math.round(this.made / this.attempted * 100) : 0
             );
         }
     };

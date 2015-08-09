@@ -7,9 +7,10 @@ function make(tagName, ctx) {
 
 /**
  * Create a new wrapped image Node.
- * @param {Window} ctx
+ * @param {Window} ctx Window context to use.
+ * @param {String} id Node id.
  */
-module.exports = function (ctx) {
+module.exports = function (ctx, id) {
     var husk = make('span', ctx),
         img = make('img', ctx);
     husk.appendChild(img);
@@ -21,7 +22,8 @@ module.exports = function (ctx) {
         set: function (url) {
             log('image', {
                 msg: 'Fetching image',
-                src: url
+                src: url,
+                id: id
             });
             img.src = url;
         }

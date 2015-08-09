@@ -10,10 +10,7 @@
         function setit() {
             setTimeout(function () {
                 // ajax
-                dorequest(
-                    'external.js?' + Math.random(),
-                    '<200frame>'
-                );
+                dorequest('external.js?' + Math.random(), '<200frame>');
 
                 // append
                 var el = document.createElement('div');

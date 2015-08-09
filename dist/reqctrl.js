@@ -206,8 +206,7 @@ module.exports = function (enabled) {
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],3:[function(require,module,exports){
-var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+var log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js');
 
@@ -253,10 +252,9 @@ module.exports = function (opts) {
     }
 };
 
-},{"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],4:[function(require,module,exports){
+},{"./log.js":9,"./marker.js":10,"./request-gate.js":11}],4:[function(require,module,exports){
 (function (global){
-var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+var log = require('./log.js'),
     harness = global.document.createElement('div'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js');
@@ -313,17 +311,13 @@ module.exports = function (opts) {
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],5:[function(require,module,exports){
+},{"./log.js":9,"./marker.js":10,"./request-gate.js":11}],5:[function(require,module,exports){
 (function (global){
-/**
- * # Request Control
- * ### ***Throttle aggressive 3rd party http requests***
- */
-
 var ajaxSpy = require('./ajax-spy.js'),
     imgSpy = require('./image-spy.js'),
     appendSpy = require('./append-spy.js'),
     createSpy = require('./create-spy.js'),
+    RequestGate = require('./request-gate.js'),
     log = require('./log.js'),
     hash;
 
@@ -334,21 +328,35 @@ var ajaxSpy = require('./ajax-spy.js'),
  * before activating the request throttle.
  * @param {Number} [opts.throttle] Defaults to 800. Minimum time in
  * milliseconds between successive requests. Only applies after grace period.
- * @param {Boolean} [opts.top] True to throttle the top window as well
- * as iframes.
- * @param {Boolean} [opts.log] True to enable system logging.
+ * Falsy to run the system but disable all request throttling.
+ * @param {Boolean} [opts.top] Defaults to false. True to throttle the top
+ * window as well as iframes.
+ * @param {Boolean} [opts.log] Defaults to false. True to enable system logging.
  * @return {Function} Callable to stop the system.
  */
 module.exports = function (opts) {
     opts = opts || {};
-    opts.grace = opts.grace || 100;
-    opts.throttle = opts.throttle || 800;
+    opts.grace = ('grace' in opts) ? opts.grace : 100;
+    opts.throttle = ('throttle' in opts) ? opts.throttle : 800;
+    opts.top = opts.top || false;
+    opts.log = opts.log || false;
+
+    // Check to disable request throttling.
+    if (!opts.throttle) {
+        RequestGate.disable();
+    }
+
+    // Enable logging from start.
+    if (opts.log) {
+        log.enable();
+    }
 
     function invade(context, id) {
         var i, frame, len, spyConf;
         context = context || global.self;
 
-        if (opts.log || global.top.rcDebug) {
+        // Enable logging during runtime.
+        if (global.top.rcDebug) {
             log.enable();
         }
 
@@ -359,7 +367,7 @@ module.exports = function (opts) {
             throttle: opts.throttle
         };
 
-        // Place spies.
+        // Place spies. Don't place spies on top Window by default.
         if (id || (!id && opts.top)) {
             context.XMLHttpRequest = ajaxSpy(spyConf);
             context.Image = imgSpy(spyConf);
@@ -370,6 +378,7 @@ module.exports = function (opts) {
         // Invade any iframes as well.
         len = context.frames.length;
         for (i = 0; i < len; i += 1) {
+            // Fails on same-origin policy violations.
             try {
                 frame = context.frames[i];
                 invade(frame, frame.frameElement.id);
@@ -394,14 +403,16 @@ module.exports = function (opts) {
 };
 
 /**
+ * ## RequestControl.log
  * Expose the system logger.
+ * @type {Function} Instance of Lumberjack.
+ * @see [Lumberjack Github](https://github.com/cobbdb/lumberjack)
  */
 module.exports.log = log;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./ajax-spy.js":3,"./append-spy.js":4,"./create-spy.js":6,"./image-spy.js":7,"./log.js":9}],6:[function(require,module,exports){
-var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+},{"./ajax-spy.js":3,"./append-spy.js":4,"./create-spy.js":6,"./image-spy.js":7,"./log.js":9,"./request-gate.js":11}],6:[function(require,module,exports){
+var log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js'),
     NewImage = require('./image.js');
@@ -424,7 +435,7 @@ module.exports = function (opts) {
     function spy(tagName) {
         if (tagName === 'img') {
             if (gate.check()) {
-                return NewImage(opts.context);
+                return NewImage(opts.context, opts.id);
             } else {
                 mark(opts.id);
                 return oldcreate.call(opts.context.document, 'span');
@@ -443,9 +454,8 @@ module.exports = function (opts) {
     }
 };
 
-},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],7:[function(require,module,exports){
-var Stats = require('./stat-set.js'),
-    log = require('./log.js'),
+},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11}],7:[function(require,module,exports){
+var log = require('./log.js'),
     RequestGate = require('./request-gate.js'),
     mark = require('./marker.js'),
     NewImage = require('./image.js');
@@ -468,7 +478,7 @@ module.exports = function (opts) {
      */
     function spy(width, height) {
         if (gate.check()) {
-            return NewImage(opts.context);
+            return NewImage(opts.context, opts.id);
         } else {
             mark(opts.id);
             return {};
@@ -485,7 +495,7 @@ module.exports = function (opts) {
     }
 };
 
-},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11,"./stat-set.js":13}],8:[function(require,module,exports){
+},{"./image.js":8,"./log.js":9,"./marker.js":10,"./request-gate.js":11}],8:[function(require,module,exports){
 (function (global){
 var log = require('./log.js'),
     oldCreate = global.document.createElement;
@@ -496,9 +506,10 @@ function make(tagName, ctx) {
 
 /**
  * Create a new wrapped image Node.
- * @param {Window} ctx
+ * @param {Window} ctx Window context to use.
+ * @param {String} id Node id.
  */
-module.exports = function (ctx) {
+module.exports = function (ctx, id) {
     var husk = make('span', ctx),
         img = make('img', ctx);
     husk.appendChild(img);
@@ -510,7 +521,8 @@ module.exports = function (ctx) {
         set: function (url) {
             log('image', {
                 msg: 'Fetching image',
-                src: url
+                src: url,
+                id: id
             });
             img.src = url;
         }
@@ -524,45 +536,69 @@ module.exports = function (ctx) {
 (function (global){
 var Lumberjack = require('lumberjackjs'),
     log = Lumberjack(),
+    summary = {},
     hash;
 module.exports = log;
 
 /**
+ * Update summary information.
+ * @param {String} id Node id.
+ * @param {String} name Type of request.
+ * @param {String} net Request summary.
+ */
+log.update = function (id, name, net) {
+    summary[id]  = summary[id] || {};
+    summary[id][name] = net;
+};
+
+/**
+ * ## log.report([types])
  * Print detailed report.
- * @param {String} types
+ * @param {String} [types] Any of [all, image, ajax, append].
+ * Space delimited.
  */
 log.report = function (types) {
-    var showImage = types.indexOf('image') >= 0,
-        showAjax = types.indexOf('ajax') >= 0,
-        showAppend = types.indexOf('append') >= 0,
-        showAll = types.indexOf('all') >= 0;
+    var showImage, showAjax, showAppend, showAll;
 
+    types = types || '';
+    showImage = types.indexOf('image') >= 0;
+    showAjax = types.indexOf('ajax') >= 0;
+    showAppend = types.indexOf('append') >= 0;
+    showAll = types.indexOf('all') >= 0;
+
+    // Clear the console.
+    global.console.clear();
+
+    // Print summary report.
+    global.console.log('\n~~~~~~~~~~~~ SUMMARY ~~~~~~~~~~~~');
+    global.console.log(
+        global.JSON.stringify(summary, null, 2)
+    );
+    global.console.log('\n');
+
+    // Print individual reports.
     if (showImage || showAll) {
-        global.console.log('\n~~~~~~~~~~~~~ IMAGE ~~~~~~~~~~~~');
+        global.console.log('\n~~~~~~~~~~~~ IMAGE ~~~~~~~~~~~~');
         global.console.log(
             global.JSON.stringify(log.readback('image'), null, 2)
         );
         global.console.log('\n');
     }
     if (showAjax || showAll) {
-        global.console.log('\n~~~~~~~~~~~~~ AJAX ~~~~~~~~~~~~');
+        global.console.log('\n~~~~~~~~~~~~ AJAX ~~~~~~~~~~~~');
         global.console.log(
             global.JSON.stringify(log.readback('ajax'), null, 2)
         );
         global.console.log('\n');
     }
     if (showAppend || showAll) {
-        global.console.log('\n~~~~~~~~~~~~~ APPEND ~~~~~~~~~~~~');
+        global.console.log('\n~~~~~~~~~~~~ APPEND ~~~~~~~~~~~~');
         global.console.log(
             global.JSON.stringify(log.readback('append'), null, 2)
         );
         global.console.log('\n');
     }
 };
-
-log.on('summary', function (data) {
-    global.console.log(data);
-});
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"lumberjackjs":2}],10:[function(require,module,exports){
@@ -590,7 +626,8 @@ module.exports = function (id) {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],11:[function(require,module,exports){
 (function (global){
-var StatSet = require('./stat-set.js');
+var StatSet = require('./stat-set.js'),
+    disabled = false;
 
 /**
  * @param {String} name Unique identifier for this gate.
@@ -618,7 +655,7 @@ module.exports = function (name, opts) {
                 free = this.stats.net.made < opts.grace;
             this.stats.count.attempted();
 
-            if (free || firstReq || greenLight) {
+            if (disabled || free || firstReq || greenLight) {
                 this.close();
                 this.stats.count.made();
                 return true;
@@ -635,6 +672,13 @@ module.exports = function (name, opts) {
     };
 };
 
+/**
+ * Call to disable all request throttling.
+ */
+module.exports.disable = function () {
+    disabled = true;
+};
+
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./stat-set.js":13}],12:[function(require,module,exports){
 (function (global){
@@ -648,7 +692,7 @@ module.exports = function () {
             return $('(made/attempted) %s/%s %s%',
                 this.made,
                 this.attempted,
-                (!this.attempted) ? 0 : global.Math.round(this.made / this.attempted * 100)
+                this.attempted ? global.Math.round(this.made / this.attempted * 100) : 0
             );
         }
     };
@@ -657,12 +701,11 @@ module.exports = function () {
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"curb":1}],13:[function(require,module,exports){
 (function (global){
-var $ = require('curb'),
-    StatNode = require('./stat-node.js'),
+var StatNode = require('./stat-node.js'),
     log = require('./log.js');
 
 /**
- * @param {String} name
+ * @param {String} name Type this set belongs to.
  * @param {String} id Element id of parent frame.
  * @return {Object}
  */
@@ -683,28 +726,21 @@ module.exports = function (name, id) {
         },
         rpsLastMade = 0,
         rpsLastAttempted = 0;
+
     global.setInterval(function () {
         // Update rps counter.
         block.rps.made = block.net.made - rpsLastMade;
         block.rps.attempted = block.net.attempted - rpsLastAttempted;
         rpsLastMade = block.net.made;
         rpsLastAttempted = block.net.attempted;
+
+        // Update log data.
+        log.update(id, name, block.net.toString());
     }, 1000);
-    global.setInterval(function () {
-        if (global.top.rcDebug) {
-            if (block.net.attempted > 0) {
-                log('summary', {
-                    msg: 'Net requests',
-                    id: id,
-                    name: name,
-                    net: block.net.toString()
-                });
-            }
-        }
-    }, 9000);
+
     return block;
 };
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./log.js":9,"./stat-node.js":12,"curb":1}]},{},[5])(5)
+},{"./log.js":9,"./stat-node.js":12}]},{},[5])(5)
 });
