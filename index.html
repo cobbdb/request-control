@@ -1,25 +1,34 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html>
   <head>
-    <meta charset="UTF-8">
-    <title>Request-control by cobbdb</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
-  </head>
-  <body>
-    <section class="page-header">
-      <h1 class="project-name">Request-control</h1>
-      <h2 class="project-tagline">Fight back against the rising tide of http requests.</h2>
-      <a href="https://github.com/cobbdb/request-control" class="btn">View on GitHub</a>
-      <a href="https://github.com/cobbdb/request-control/zipball/master" class="btn">Download .zip</a>
-      <a href="https://github.com/cobbdb/request-control/tarball/master" class="btn">Download .tar.gz</a>
-    </section>
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
 
-    <section class="main-content">
-      <p><a href="https://github.com/cobbdb/request-control">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Request-control by cobbdb</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Request-control</h1>
+        <h2>Fight back against the rising tide of http requests.</h2>
+        <a href="https://github.com/cobbdb/request-control" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <p><a href="https://github.com/cobbdb/request-control">
     <img alt="logo" src="http://i.imgur.com/xrtq29k.png" width="300">
 </a></p>
 
@@ -71,42 +80,37 @@ Throttle();</pre></div>
 
 <p>To better tune the throttle for your site, there are a few options you can customize.</p>
 
+<div class="highlight highlight-javascript"><pre><span class="pl-c">// Default values are as follows:</span>
+RequestControl({
+    throttle<span class="pl-k">:</span> <span class="pl-c1">100</span>,
+    grace<span class="pl-k">:</span> <span class="pl-c1">800</span>,
+    top<span class="pl-k">:</span> <span class="pl-c1">false</span>,
+    log<span class="pl-k">:</span> <span class="pl-c1">false</span>
+});</pre></div>
+
 <h5>
 <a id="throttle" class="anchor" href="#throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>throttle</h5>
 
-<p><strong>{Number}</strong> This is the time in milliseconds to enfore between successive http requests.</p>
-
-<div class="highlight highlight-javascript"><pre>RequestControl({
-    throttle<span class="pl-k">:</span> <span class="pl-c1">4000</span>
-});</pre></div>
+<p><strong>Number</strong> Time in milliseconds to wait between successive http requests.
+Falsy (<code>0 false null undefined</code>) to run the system but disable the
+throttle and allow all requests to complete.</p>
 
 <h5>
 <a id="grace" class="anchor" href="#grace" aria-hidden="true"><span class="octicon octicon-link"></span></a>grace</h5>
 
-<p><strong>{Number}</strong> Number of requests to allow before engaging the throttle.</p>
-
-<div class="highlight highlight-javascript"><pre>RequestControl({
-    grace<span class="pl-k">:</span> <span class="pl-c1">50</span>
-});</pre></div>
+<p><strong>Number</strong> Number of requests to allow before engaging the throttle.</p>
 
 <h5>
 <a id="top" class="anchor" href="#top" aria-hidden="true"><span class="octicon octicon-link"></span></a>top</h5>
 
-<p><strong>{Boolean}</strong> True to throttle the top window as well as iframes.</p>
-
-<div class="highlight highlight-javascript"><pre>RequestControl({
-    top<span class="pl-k">:</span> <span class="pl-c1">true</span>
-});</pre></div>
+<p><strong>Boolean</strong> True to throttle the top window as well as iFrames.</p>
 
 <h5>
 <a id="log" class="anchor" href="#log" aria-hidden="true"><span class="octicon octicon-link"></span></a>log</h5>
 
-<p><strong>{Boolean}</strong> True to enable logging. Lumberjack logs with <a href="http://cobbdb.github.io/lumberjack/">Lumberjack</a>
-to 4 channels: <code>summary</code>, <code>image</code>, <code>ajax</code>, <code>append</code>.</p>
-
-<div class="highlight highlight-javascript"><pre>RequestControl({
-    log<span class="pl-k">:</span> <span class="pl-c1">true</span>
-});</pre></div>
+<p><strong>Boolean</strong> True to enable logging. RequestControl logs with
+<a href="https://github.com/cobbdb/lumberjack">Lumberjack</a> to 3
+channels: <code>image</code>, <code>ajax</code>, <code>append</code>.</p>
 
 <h3>
 <a id="debugging-your-site" class="anchor" href="#debugging-your-site" aria-hidden="true"><span class="octicon octicon-link"></span></a>Debugging your Site</h3>
@@ -120,8 +124,10 @@ and set the <code>rcDebug</code> variable in the <strong>top window</strong>.</p
 
 <span class="pl-c">// Print a detailed report of network activity.</span>
 <span class="pl-c">// Available reports are: image, ajax, append. You can request reports for</span>
-<span class="pl-c">// any of these. For example, to get only image and ajax reports:</span>
-<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>image ajax<span class="pl-pds">'</span></span>);</pre></div>
+<span class="pl-c">// any of these.</span>
+<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>image ajax<span class="pl-pds">'</span></span>); <span class="pl-c">// Report only image and ajax data.</span>
+<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>append<span class="pl-pds">'</span></span>); <span class="pl-c">// Get append data only.</span>
+<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(); <span class="pl-c">// Get summary only.</span></pre></div>
 
 <h3>
 <a id="stopping-the-throttle" class="anchor" href="#stopping-the-throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stopping the Throttle</h3>
@@ -144,14 +150,24 @@ halt();</pre></div>
 </li>
 <li>License: MIT</li>
 </ul>
+        </section>
 
-      <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.com/cobbdb/request-control">Request-control</a> is maintained by <a href="https://github.com/cobbdb">cobbdb</a>.</span>
+        <aside id="sidebar">
+          <a href="https://github.com/cobbdb/request-control/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/cobbdb/request-control/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
 
-        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
-      </footer>
+          <p class="repo-owner"><a href="https://github.com/cobbdb/request-control"></a> is maintained by <a href="https://github.com/cobbdb">cobbdb</a>.</p>
 
-    </section>
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
 
             <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
