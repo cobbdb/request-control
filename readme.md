@@ -45,40 +45,31 @@ Throttle();
 
 ### Configuration
 To better tune the throttle for your site, there are a few options you can customize.
+```javascript
+// Default values are as follows:
+RequestControl({
+    throttle: 100,
+    grace: 800,
+    top: false,
+    log: false
+});
+```
 
 ##### throttle
-**{Number}** This is the time in milliseconds to enfore between successive http requests.
-```javascript
-RequestControl({
-    throttle: 4000
-});
-```
+**Number** Time in milliseconds to wait between successive http requests.
+Falsy (`0 false null undefined`) to run the system but disable the
+throttle and allow all requests to complete.
 
 ##### grace
-**{Number}** Number of requests to allow before engaging the throttle.
-```javascript
-RequestControl({
-    grace: 50
-});
-```
+**Number** Number of requests to allow before engaging the throttle.
 
 ##### top
-**{Boolean}** True to throttle the top window as well as iframes.
-```javascript
-RequestControl({
-    top: true
-});
-```
+**Boolean** True to throttle the top window as well as iFrames.
 
 ##### log
-**{Boolean}** True to enable logging. RequestControl logs with
-[Lumberjack](https://github.com/cobbdb/lumberjack) to 4
+**Boolean** True to enable logging. RequestControl logs with
+[Lumberjack](https://github.com/cobbdb/lumberjack) to 3
 channels: `image`, `ajax`, `append`.
-```javascript
-RequestControl({
-    log: true
-});
-```
 
 ### Debugging your Site
 Request Control features logging and DOM element highlighting to help you find those
