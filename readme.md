@@ -69,7 +69,7 @@ Request Control features logging and DOM element highlighting to help you find t
 problem areas on your site. Just open the JavaScript console in your browser
 and set the `rcDebug` variable in the **top window**.
 ```javascript
-// Enable basic highlighting and request summary reports.
+// Enable DOM node highlighting and enable logging on the fly.
 > rcDebug = true;
 
 // Print a detailed report of network activity.
