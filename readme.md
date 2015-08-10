@@ -55,19 +55,12 @@ RequestControl({
 });
 ```
 
-##### throttle
-**Number** Time in milliseconds to wait between successive http requests.
+* **throttle** *{Number}* Time in milliseconds to wait between successive http requests.
 Falsy (`0 false null undefined`) to run the system but disable the
 throttle and allow all requests to complete.
-
-##### grace
-**Number** Number of requests to allow before engaging the throttle.
-
-##### top
-**Boolean** True to throttle the top window as well as iFrames.
-
-##### log
-**Boolean** True to enable logging. RequestControl logs with
+* **grace** *{Number}* Number of requests to allow before engaging the throttle.
+* **top** *{Boolean}* True to throttle the top window as well as iFrames.
+* **log** *{Boolean}* True to enable logging. RequestControl logs with
 [Lumberjack](https://github.com/cobbdb/lumberjack) to 3
 channels: `image`, `ajax`, `append`.
 
