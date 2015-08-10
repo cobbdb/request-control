@@ -88,29 +88,20 @@ RequestControl({
     log<span class="pl-k">:</span> <span class="pl-c1">false</span>
 });</pre></div>
 
-<h5>
-<a id="throttle" class="anchor" href="#throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>throttle</h5>
-
-<p><strong>Number</strong> Time in milliseconds to wait between successive http requests.
+<ul>
+<li>
+<strong>throttle</strong> <em>{Number}</em> Time in milliseconds to wait between successive http requests.
 Falsy (<code>0 false null undefined</code>) to run the system but disable the
-throttle and allow all requests to complete.</p>
-
-<h5>
-<a id="grace" class="anchor" href="#grace" aria-hidden="true"><span class="octicon octicon-link"></span></a>grace</h5>
-
-<p><strong>Number</strong> Number of requests to allow before engaging the throttle.</p>
-
-<h5>
-<a id="top" class="anchor" href="#top" aria-hidden="true"><span class="octicon octicon-link"></span></a>top</h5>
-
-<p><strong>Boolean</strong> True to throttle the top window as well as iFrames.</p>
-
-<h5>
-<a id="log" class="anchor" href="#log" aria-hidden="true"><span class="octicon octicon-link"></span></a>log</h5>
-
-<p><strong>Boolean</strong> True to enable logging. RequestControl logs with
+throttle and allow all requests to complete.</li>
+<li>
+<strong>grace</strong> <em>{Number}</em> Number of requests to allow before engaging the throttle.</li>
+<li>
+<strong>top</strong> <em>{Boolean}</em> True to throttle the top window as well as iFrames.</li>
+<li>
+<strong>log</strong> <em>{Boolean}</em> True to enable logging. RequestControl logs with
 <a href="https://github.com/cobbdb/lumberjack">Lumberjack</a> to 3
-channels: <code>image</code>, <code>ajax</code>, <code>append</code>.</p>
+channels: <code>image</code>, <code>ajax</code>, <code>append</code>.</li>
+</ul>
 
 <h3>
 <a id="debugging-your-site" class="anchor" href="#debugging-your-site" aria-hidden="true"><span class="octicon octicon-link"></span></a>Debugging your Site</h3>
