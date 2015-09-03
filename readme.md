@@ -61,8 +61,8 @@ throttle and allow all requests to complete.
 * **grace** *{Number}* Number of requests to allow before engaging the throttle.
 * **top** *{Boolean}* True to throttle the top window as well as iFrames.
 * **log** *{Boolean}* True to enable logging. RequestControl logs with
-[Lumberjack](https://github.com/cobbdb/lumberjack) to 3
-channels: `image`, `ajax`, `append`.
+[Lumberjack](https://github.com/cobbdb/lumberjack) to 4
+channels: `image`, `ajax`, `append`, `gate`.
 
 ### Debugging your Site
 Request Control features logging and DOM element highlighting to help you find those
@@ -70,14 +70,21 @@ problem areas on your site. Just open the JavaScript console in your browser
 and set the `rcDebug` variable in the **top window**.
 ```javascript
 // Enable DOM node highlighting and enable logging on the fly.
-> rcDebug = true;
+rcDebug = true;
 
 // Print a detailed report of network activity.
 // Available reports are: image, ajax, append. You can request reports for
 // any of these.
-> RequestControl.log.report('image ajax'); // Report only image and ajax data.
-> RequestControl.log.report('append'); // Get append data only.
-> RequestControl.log.report(); // Get summary only.
+RequestControl.log.report('image ajax'); // Report only image and ajax data.
+RequestControl.log.report('append'); // Get append data only.
+RequestControl.log.report(); // Get summary only.
+
+// Bind callbacks to log events.
+RequestControl.log.on('gate', function (data) {
+    if (data.blocked) {
+        // Report metrics on blocked content.
+    }
+});
 ```
 
 ### Stopping the Throttle

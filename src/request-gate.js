@@ -1,10 +1,12 @@
 var StatSet = require('./stat-set.js'),
+    log = require('./log.js'),
     disabled = false;
 
 /**
  * @param {String} name Unique identifier for this gate.
  * @param {Number} opts.throttle
  * @param {Number} opts.grace
+ * @param {String} opts.id Used for logging.
  * @param {Window} [opts.context]
  * @return {Object}
  */
@@ -30,8 +32,22 @@ module.exports = function (name, opts) {
             if (disabled || free || firstReq || greenLight) {
                 this.close();
                 this.stats.count.made();
+                log('gate', {
+                    blocked: false,
+                    type: name,
+                    id: opts.id,
+                    made: this.stats.net.made,
+                    attempted: this.stats.net.attempted
+                });
                 return true;
             }
+            log('gate', {
+                blocked: true,
+                type: name,
+                id: opts.id,
+                made: this.stats.net.made,
+                attempted: this.stats.net.attempted
+            });
             return false;
         },
         close: function () {
