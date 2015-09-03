@@ -99,8 +99,8 @@ throttle and allow all requests to complete.</li>
 <strong>top</strong> <em>{Boolean}</em> True to throttle the top window as well as iFrames.</li>
 <li>
 <strong>log</strong> <em>{Boolean}</em> True to enable logging. RequestControl logs with
-<a href="https://github.com/cobbdb/lumberjack">Lumberjack</a> to 3
-channels: <code>image</code>, <code>ajax</code>, <code>append</code>.</li>
+<a href="https://github.com/cobbdb/lumberjack">Lumberjack</a> to 4
+channels: <code>image</code>, <code>ajax</code>, <code>append</code>, <code>gate</code>.</li>
 </ul>
 
 <h3>
@@ -111,14 +111,21 @@ problem areas on your site. Just open the JavaScript console in your browser
 and set the <code>rcDebug</code> variable in the <strong>top window</strong>.</p>
 
 <div class="highlight highlight-javascript"><pre><span class="pl-c">// Enable DOM node highlighting and enable logging on the fly.</span>
-<span class="pl-k">&gt;</span> rcDebug <span class="pl-k">=</span> <span class="pl-c1">true</span>;
+rcDebug <span class="pl-k">=</span> <span class="pl-c1">true</span>;
 
 <span class="pl-c">// Print a detailed report of network activity.</span>
 <span class="pl-c">// Available reports are: image, ajax, append. You can request reports for</span>
 <span class="pl-c">// any of these.</span>
-<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>image ajax<span class="pl-pds">'</span></span>); <span class="pl-c">// Report only image and ajax data.</span>
-<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>append<span class="pl-pds">'</span></span>); <span class="pl-c">// Get append data only.</span>
-<span class="pl-k">&gt;</span> RequestControl<span class="pl-c1">.log</span>.report(); <span class="pl-c">// Get summary only.</span></pre></div>
+RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>image ajax<span class="pl-pds">'</span></span>); <span class="pl-c">// Report only image and ajax data.</span>
+RequestControl<span class="pl-c1">.log</span>.report(<span class="pl-s"><span class="pl-pds">'</span>append<span class="pl-pds">'</span></span>); <span class="pl-c">// Get append data only.</span>
+RequestControl<span class="pl-c1">.log</span>.report(); <span class="pl-c">// Get summary only.</span>
+
+<span class="pl-c">// Bind callbacks to log events.</span>
+RequestControl<span class="pl-c1">.log</span>.on(<span class="pl-s"><span class="pl-pds">'</span>gate<span class="pl-pds">'</span></span>, <span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+    <span class="pl-k">if</span> (data.blocked) {
+        <span class="pl-c">// Report metrics on blocked content.</span>
+    }
+});</pre></div>
 
 <h3>
 <a id="stopping-the-throttle" class="anchor" href="#stopping-the-throttle" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stopping the Throttle</h3>
